@@ -59,12 +59,21 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .page .lead{font-size:13px;color:var(--sub);line-height:1.8;margin:0}
 .bar{display:flex;align-items:center;justify-content:space-between}
 .back{width:36px;height:36px;border-radius:18px;border:1px solid var(--pill-line);background:none;padding:0;display:grid;place-items:center}
-.back svg{display:block}
+.back{position:relative;color:#4d4c4a}
+.back svg{position:absolute;left:10px;top:8px}
 .card{background:var(--card);border:1px solid var(--card-line);border-radius:18px}
-.perm{display:flex;align-items:center;gap:12px;padding:22px 20px}
+.perm{display:flex;align-items:flex-start;gap:12px;padding:21px 19px 0 20px;height:96px;box-sizing:border-box}
 .perm div{flex:1;min-width:0}
-.perm b{display:block;font-weight:400;font-size:16px;margin-bottom:8px}
-.perm span{font-size:12px;color:var(--sub)}
+.perm b{display:block;font-weight:400;font-size:16px;line-height:23px;margin-bottom:5px}
+.perm span{display:block;font-size:12px;line-height:19px;color:var(--sub)}
+.perm .sw{margin-top:13px}
+/* P-03 / P-04 三角試しの配置：戻る→見出し22px、見出し→説明14px、説明→カード10px、カードの間16px、文字は左28px */
+#v-perm,#v-place{gap:0}
+#v-perm h1,#v-place h1{margin:22px 0 0 4px}
+#v-perm .lead,#v-place .lead{margin:14px 0 0 4px;line-height:1.75}
+#v-perm .card,#v-place .card{margin-top:16px}
+#v-perm .lead+.card{margin-top:10px}
+#v-place .lead+.card{margin-top:33px}
 .sw{width:44px;height:26px;border-radius:13px;border:0;background:var(--off);position:relative;flex:none;padding:0}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--card);transition:left .15s}
 .sw[aria-checked="true"]{background:var(--ink)}
@@ -143,7 +152,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tools .tab{background:none;border:0;padding:6px 0;font-size:13px;color:var(--ink);border-bottom:1px solid transparent}
 .tools .tab[aria-pressed="true"]{border-bottom-color:var(--ink)}
 .tools .btn{width:110px;height:48px;margin-left:auto}
-.place{display:flex;align-items:center;gap:12px;padding:12px 20px}
+.place{display:flex;align-items:center;gap:12px;padding:0 20px;height:68px;box-sizing:border-box}
 .place div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .place small{font-size:11px;color:var(--sub)}
 .place input{font-family:var(--font);font-size:16px;color:var(--ink);background:none;border:0;padding:0;outline:none;width:100%;-webkit-user-select:text;user-select:text}
@@ -192,18 +201,18 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-03 よく行く場所を登録する -->
 <section id="v-place" class="page" hidden>
-  <div class="bar"><button class="back" id="p-back" type="button" aria-label="戻る"><svg width="12" height="21" viewBox="0 0 12 21" fill="currentColor" shape-rendering="crispEdges"><path d="M9 0h3v3h-3zM6 3h3v3h-3zM3 6h3v3h-3zM0 9h3v3h-3zM3 12h3v3h-3zM6 15h3v3h-3zM9 18h3v3h-3z"/></svg></button><span class="step">2 / 3</span></div>
+  <div class="bar"><button class="back" id="p-back" type="button" aria-label="戻る"><svg width="10.6" height="18.55" viewBox="0 0 10.6 18.55" fill="currentColor"><path d="M7.95 0.00h2.65v2.65h-2.65zM5.30 2.65h2.65v2.65h-2.65zM2.65 5.30h2.65v2.65h-2.65zM0.00 7.95h2.65v2.65h-2.65zM2.65 10.60h2.65v2.65h-2.65zM5.30 13.25h2.65v2.65h-2.65zM7.95 15.90h2.65v2.65h-2.65z"/></svg></button><span class="step">2 / 3</span></div>
   <h1>よく行く場所を<br>登録する</h1>
   <p class="lead">ここを起点に、未知かどうかを決めます。</p>
   <label class="card place on"><div><small>自宅</small><input id="pl0" value="左京区一乗寺" enterkeyhint="done"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10" cy="10" r="9"/><path d="M6 10l3 3 5-6"/></svg></label>
   <label class="card place"><div><small>よく行く場所 1</small><input id="pl1" placeholder="住所や駅名でさがす" enterkeyhint="done"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10" cy="10" r="9"/><path d="M10 6v8M6 10h8"/></svg></label>
   <label class="card place"><div><small>よく行く場所 2</small><input id="pl2" placeholder="住所や駅名でさがす" enterkeyhint="done"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10" cy="10" r="9"/><path d="M10 6v8M6 10h8"/></svg></label>
-  <p class="lead" style="margin-top:12px">空のままでも進めます。</p>
+  <p class="lead" style="margin-top:28px">空のままでも進めます。</p>
 </section>
 
 <!-- P-04 位置情報と写真の利用 -->
 <section id="v-perm" class="page" hidden>
-  <div class="bar"><button class="back" id="back" type="button" aria-label="戻る"><svg width="12" height="21" viewBox="0 0 12 21" fill="currentColor" shape-rendering="crispEdges"><path d="M9 0h3v3h-3zM6 3h3v3h-3zM3 6h3v3h-3zM0 9h3v3h-3zM3 12h3v3h-3zM6 15h3v3h-3zM9 18h3v3h-3z"/></svg></button><span class="step">3 / 3</span></div>
+  <div class="bar"><button class="back" id="back" type="button" aria-label="戻る"><svg width="10.6" height="18.55" viewBox="0 0 10.6 18.55" fill="currentColor"><path d="M7.95 0.00h2.65v2.65h-2.65zM5.30 2.65h2.65v2.65h-2.65zM2.65 5.30h2.65v2.65h-2.65zM0.00 7.95h2.65v2.65h-2.65zM2.65 10.60h2.65v2.65h-2.65zM5.30 13.25h2.65v2.65h-2.65zM7.95 15.90h2.65v2.65h-2.65z"/></svg></button><span class="step">3 / 3</span></div>
   <h1>位置情報と写真の<br>利用</h1>
   <p class="lead">どちらも任意です。<br>端末の中だけで使い、外へ送りません。</p>
   <div class="card perm"><div><b>位置情報</b><span>いまの向きと距離を出すために使います。</span></div><button class="sw" id="sw-loc" type="button" role="switch" aria-checked="true" aria-label="位置情報"></button></div>
@@ -257,7 +266,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-18 これまでの片道切符 -->
 <section id="v-list" class="page" hidden>
-  <div class="bar"><button class="back" id="l-back" type="button" aria-label="戻る"><svg width="12" height="21" viewBox="0 0 12 21" fill="currentColor" shape-rendering="crispEdges"><path d="M9 0h3v3h-3zM6 3h3v3h-3zM3 6h3v3h-3zM0 9h3v3h-3zM3 12h3v3h-3zM6 15h3v3h-3zM9 18h3v3h-3z"/></svg></button></div>
+  <div class="bar"><button class="back" id="l-back" type="button" aria-label="戻る"><svg width="10.6" height="18.55" viewBox="0 0 10.6 18.55" fill="currentColor"><path d="M7.95 0.00h2.65v2.65h-2.65zM5.30 2.65h2.65v2.65h-2.65zM2.65 5.30h2.65v2.65h-2.65zM0.00 7.95h2.65v2.65h-2.65zM2.65 10.60h2.65v2.65h-2.65zM5.30 13.25h2.65v2.65h-2.65zM7.95 15.90h2.65v2.65h-2.65z"/></svg></button></div>
   <h1>これまでの片道切符</h1>
   <p class="lead" style="margin-top:-8px">行った町は、あなたの「知っている範囲」に加わります。</p>
   <div class="tlist" id="tlist"></div>
@@ -265,7 +274,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-17 今日の片道（記録） / P-19 詳細 -->
 <section id="v-rec" class="page rec" hidden>
-  <div class="bar" id="r-bar" hidden><button class="back" id="r-back" type="button" aria-label="戻る"><svg width="12" height="21" viewBox="0 0 12 21" fill="currentColor" shape-rendering="crispEdges"><path d="M9 0h3v3h-3zM6 3h3v3h-3zM3 6h3v3h-3zM0 9h3v3h-3zM3 12h3v3h-3zM6 15h3v3h-3zM9 18h3v3h-3z"/></svg></button></div>
+  <div class="bar" id="r-bar" hidden><button class="back" id="r-back" type="button" aria-label="戻る"><svg width="10.6" height="18.55" viewBox="0 0 10.6 18.55" fill="currentColor"><path d="M7.95 0.00h2.65v2.65h-2.65zM5.30 2.65h2.65v2.65h-2.65zM2.65 5.30h2.65v2.65h-2.65zM0.00 7.95h2.65v2.65h-2.65zM2.65 10.60h2.65v2.65h-2.65zM5.30 13.25h2.65v2.65h-2.65zM7.95 15.90h2.65v2.65h-2.65z"/></svg></button></div>
   <h1 id="r-h1">今日の片道</h1>
   <p class="lead" id="r-lead" style="margin-top:-8px">評価はつけません。歩いたことだけを残します。</p>
   <div class="card ticket">
