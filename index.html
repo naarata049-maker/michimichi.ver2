@@ -58,7 +58,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .page h1{font-weight:400;font-size:26px;line-height:1.5;margin:0;letter-spacing:.02em}
 .page .lead{font-size:13px;color:var(--sub);line-height:1.8;margin:0}
 .bar{display:flex;align-items:center;justify-content:space-between}
-.back{width:36px;height:36px;border-radius:18px;border:1px solid var(--pill-line);background:none;font-size:16px;padding:0}
+.back{width:36px;height:36px;border-radius:18px;border:1px solid var(--pill-line);background:none;padding:0;display:grid;place-items:center}
+.back svg{margin-left:-2px}
 .card{background:var(--card);border:1px solid var(--card-line);border-radius:18px}
 .perm{display:flex;align-items:center;gap:12px;padding:22px 20px}
 .perm div{flex:1;min-width:0}
@@ -81,8 +82,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #v-cond{padding-top:clamp(24px,calc(100dvh - 637px),54px)}
 #c-lead{margin-top:-5px}
 #v-cond h1,#c-lead{margin-left:12px}
-#v-cond .menu-btn{margin-right:-6px}
-#v-cond .menu{right:max(18px,calc(env(safe-area-inset-right,0px) - 6px))}
+#v-cond .bar{align-items:flex-end}
+#v-cond .menu-btn{margin-right:5px;margin-bottom:0;background:rgba(251,248,241,.3);border-color:#dcd3c1}
+#v-cond .menu-btn[aria-expanded="true"]{background:var(--dial-dot)}
+#v-cond .menu{right:max(29px,calc(env(safe-area-inset-right,0px) + 5px))}
 #v-cond .ticket{margin-top:17px}
 .bottom.cond{bottom:calc(env(safe-area-inset-bottom,0px) + 29px)}
 .shade{position:fixed;inset:0;background:rgba(46,44,40,.28);z-index:5}
@@ -100,7 +103,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .cut{border-top:1px dashed var(--chip-line);margin:10px -24px 18px;position:relative}
 .cut::before,.cut::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:10px;background:var(--gap);border:1px solid var(--card-line)}
 .cut::before{left:-11px}.cut::after{right:-11px}
-.rec{gap:clamp(8px,1.6vh,14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 190px)}
+.rec{gap:clamp(8px,1.6vh,14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 176px)}
 .rec .ticket{margin-top:clamp(4px,1.4vh,22px);gap:clamp(4px,1vh,10px);flex:0 1 auto;min-height:0;overflow:hidden}
 .rec .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rec .place{font-size:clamp(34px,5.2vh,44px);letter-spacing:.06em;line-height:1.2;white-space:nowrap}
@@ -189,7 +192,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-03 よく行く場所を登録する -->
 <section id="v-place" class="page" hidden>
-  <div class="bar"><button class="back" id="p-back" type="button" aria-label="戻る">&lt;</button><span class="step">2 / 3</span></div>
+  <div class="bar"><button class="back" id="p-back" type="button" aria-label="戻る"><svg width="7" height="12" viewBox="-0.8 -0.5 7.3 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 0L0 5.5l5.5 5.5"/></svg></button><span class="step">2 / 3</span></div>
   <h1>よく行く場所を<br>登録する</h1>
   <p class="lead">ここを起点に、未知かどうかを決めます。</p>
   <label class="card place on"><div><small>自宅</small><input id="pl0" value="左京区一乗寺" enterkeyhint="done"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10" cy="10" r="9"/><path d="M6 10l3 3 5-6"/></svg></label>
@@ -200,7 +203,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-04 位置情報と写真の利用 -->
 <section id="v-perm" class="page" hidden>
-  <div class="bar"><button class="back" id="back" type="button" aria-label="戻る">&lt;</button><span class="step">3 / 3</span></div>
+  <div class="bar"><button class="back" id="back" type="button" aria-label="戻る"><svg width="7" height="12" viewBox="-0.8 -0.5 7.3 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 0L0 5.5l5.5 5.5"/></svg></button><span class="step">3 / 3</span></div>
   <h1>位置情報と写真の<br>利用</h1>
   <p class="lead">どちらも任意です。<br>端末の中だけで使い、外へ送りません。</p>
   <div class="card perm"><div><b>位置情報</b><span>いまの向きと距離を出すために使います。</span></div><button class="sw" id="sw-loc" type="button" role="switch" aria-checked="true" aria-label="位置情報"></button></div>
@@ -254,7 +257,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-18 これまでの片道切符 -->
 <section id="v-list" class="page" hidden>
-  <div class="bar"><button class="back" id="l-back" type="button" aria-label="戻る">&lt;</button></div>
+  <div class="bar"><button class="back" id="l-back" type="button" aria-label="戻る"><svg width="7" height="12" viewBox="-0.8 -0.5 7.3 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 0L0 5.5l5.5 5.5"/></svg></button></div>
   <h1>これまでの片道切符</h1>
   <p class="lead" style="margin-top:-8px">行った町は、あなたの「知っている範囲」に加わります。</p>
   <div class="tlist" id="tlist"></div>
@@ -262,7 +265,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 <!-- P-17 今日の片道（記録） / P-19 詳細 -->
 <section id="v-rec" class="page rec" hidden>
-  <div class="bar" id="r-bar" hidden><button class="back" id="r-back" type="button" aria-label="戻る">&lt;</button></div>
+  <div class="bar" id="r-bar" hidden><button class="back" id="r-back" type="button" aria-label="戻る"><svg width="7" height="12" viewBox="-0.8 -0.5 7.3 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 0L0 5.5l5.5 5.5"/></svg></button></div>
   <h1 id="r-h1">今日の片道</h1>
   <p class="lead" id="r-lead" style="margin-top:-8px">評価はつけません。歩いたことだけを残します。</p>
   <div class="card ticket">
@@ -481,7 +484,7 @@ function renderRec(t,detail){
   const name=t.name||'名前のない町';
   $('r-no').textContent='No.'+t.no;
   $('r-name').textContent=name;
-  $('r-name').style.fontSize=name.length>4?Math.floor(230/name.length)+'px':'';
+  $('r-name').style.fontSize=name.length>4?'min('+Math.floor(230/name.length)+'px,clamp(34px,5.2vh,44px))':'';
   $('r-kana').textContent=t.kana||'';
   $('r-hint').textContent=t.hint;
   $('r-dist').textContent=(t.km||0).toFixed(1)+' km';
