@@ -23,9 +23,9 @@
   color-scheme:light;
 }
 html{background:var(--gap) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='6' height='6' fill='%23d3e8e0'/%3E%3Crect width='4' height='4' fill='%23b2dfd9'/%3E%3Crect x='4' y='4' width='2' height='2' fill='%23e3ece4'/%3E%3C/svg%3E") 0 0/6px 6px repeat}
-html,body{margin:0;min-height:100lvh;overscroll-behavior:none;touch-action:manipulation;color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 [hidden]{display:none!important}
-canvas{position:fixed;top:0;left:0;width:100vw;height:100lvh;display:block}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .pill{position:fixed;top:max(40px,calc(env(safe-area-inset-top,0px) + 10px));left:max(24px,env(safe-area-inset-left,0px));padding:8px 15px;font-size:13px;background:var(--pill);border:1px solid var(--pill-line);border-radius:18px}
 .t{position:fixed;left:0;right:0;margin:0;text-align:center;transform:translateY(-50%);white-space:nowrap}
 .dist{font-size:44px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
@@ -118,12 +118,15 @@ function dialLayer(map,arrow){
 }
 function layout(){
   dpr=Math.min(window.devicePixelRatio||1,3);
-  W=document.documentElement.clientWidth; H=Math.max(innerHeight,cv.getBoundingClientRect().height);
+  W=document.documentElement.clientWidth; H=innerHeight;
   cv.width=W*dpr; cv.height=H*dpr; cx.setTransform(dpr,0,0,dpr,0,0);
   const ox=(((Math.round(W/2)-2)%P)+P)%P;                 // 真ん中に点の列が来るように
   document.documentElement.style.backgroundPosition=ox+'px 0';
   cxp=Math.round(W/2)-2;                                  // 中心の点の左上
-  cyp=Math.round((H*410/852-2)/P)*P;                       // Figmaと同じ高さの割合
+  // 文字盤の高さ：Figmaと同じ割合を基本に、下の文字がボタンにかからない高さまで上げる
+  const btnTop=document.querySelector('.bottom').getBoundingClientRect().bottom-54;
+  const ideal=H*410/852, maxC=btnTop-16-282, minC=250;
+  cyp=Math.round((Math.max(minC,Math.min(ideal,maxC))-2)/P)*P;
   document.querySelectorAll('[data-y]').forEach(el=>el.style.top=(cyp+2+ +el.dataset.y)+'px');
   bgs={compass:dialLayer(DIAL,true),plain:dialLayer(DIAL,false),search:dialLayer(DIAL6,false)};
 }
@@ -178,7 +181,7 @@ function renderArrive(){
   const big=showHint?dest.hint:name;
   $('a-label').textContent=showHint?'きっかけ':'今日の場所';
   $('a-name').textContent=big;
-  $('a-name').style.fontSize=Math.min(40,Math.floor(232/big.length))+'px';
+  $('a-name').style.fontSize=Math.min(40,Math.floor(210/big.length))+'px';
   $('a-sub').textContent=showHint?name:(dest.kana||'');
   $('a-sub').className='t '+(showHint?'small':'kana');
   $('a-foot').innerHTML=showHint?'もう一度タップで戻る':'きっかけがほしいときは<br>画面をタップ';
