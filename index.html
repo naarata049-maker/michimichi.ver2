@@ -417,13 +417,35 @@ async function townName(p){
   let name=g&&g.results&&g.results.lv01Nm;
   if(name&&name!=='−'&&name!=='-'){
     name=name.replace(/[一二三四五六七八九十]+丁目$/,'').replace(/[0-9０-９]+$/,'');
-    if(name)return {name,kana:''};
+    if(name)return {name,kana:await kanaOf(g.results.muniCd,name,p)};
   }
   const o=await getJSON('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=ja&lat='+p.lat+'&lon='+p.lng);
   const a=o&&o.address;
   if(a){const n=a.neighbourhood||a.quarter||a.suburb||a.hamlet||a.village||a.town;if(n)return {name:n,kana:''};}
   return null;
 }
+// 読みがな：①郵便番号データ（市区町村コード×町名）②OpenStreetMapの読み ③郵便番号データの近い町名をつなぐ
+const kanaCache={};
+async function kanaTable(code){
+  const pref=String(code||'').padStart(5,'0').slice(0,2);
+  if(!(pref in kanaCache))kanaCache[pref]=await getJSON('kana/'+pref+'.json');
+  return kanaCache[pref];
+}
+const toHira=s=>s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+async function kanaOf(code,name,p){
+  const tb=await kanaTable(code), towns=tb&&tb[String(code).padStart(5,'0')];
+  if(towns&&towns[name])return towns[name];
+  const o=await getJSON('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=jp&namedetails=1&limit=5&bounded=1&viewbox='+(p.lng-.03)+','+(p.lat+.03)+','+(p.lng+.03)+','+(p.lat-.03)+'&q='+encodeURIComponent(name));
+  for(const r of o||[]){const n=r.namedetails||{};if(n.name===name||n['name:ja']===name){const k=n['name:ja-Hira']||n['name:ja_kana']||n['name:ja-Kana'];if(k)return toHira(k);}}
+  if(towns){   // 町名の頭と残りを、それぞれ表にある町名でつなぐ（いちばん長く一致するものから）
+    const keys=Object.keys(towns).sort((a,b)=>b.length-a.length);
+    let rest=name, out='';
+    while(rest){const k=keys.find(k=>rest.startsWith(k)); if(!k)break; out+=towns[k]; rest=rest.slice(k.length);}
+    if(!rest&&out)return out;
+  }
+  return '';
+}
+
 // 行き先を決める：選んだ時間と移動で行ける距離の、名前のある町
 async function decide(){
   show('search');
