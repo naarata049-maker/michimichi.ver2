@@ -383,11 +383,10 @@ function renderArrive(){
   const big=showHint?dest.hint:name;
   $('a-label').textContent=showHint?'きっかけ':'今日の場所';
   $('a-name').textContent=big;
-  // きっかけも町名と同じ文字の大きさにする（長いときは2行に折り返す）
+  // きっかけも町名と同じ文字の大きさにする
   const size=Math.min(40,Math.floor(210/name.length));
   $('a-name').style.fontSize=size+'px';
-  const wrap=big.length*size>230;
-  $('a-name').style.whiteSpace=wrap?'normal':''; $('a-name').style.width=wrap?'230px':''; $('a-name').style.margin=wrap?'0 auto':''; $('a-name').style.lineHeight=wrap?'1.15':'';
+  // 長いきっかけも折り返さず1行（円からはみ出してよい）
   $('a-sub').textContent=showHint?name:(dest.kana||'');
   $('a-sub').className='t '+(showHint?'small':'kana');
   $('a-foot').innerHTML=showHint?'もう一度タップで戻る':'きっかけがほしいときは<br>画面をタップ';
