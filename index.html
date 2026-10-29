@@ -471,11 +471,12 @@ $('arrived').addEventListener('click',()=>{showHint=false;show('arrive');});
 // 到着画面：画面をタップできっかけ、もう一度で戻る
 document.addEventListener('click',e=>{
   if(view==='boot'){bootNext();return;}
-  // T-6：文字盤をタップすると、今日の場所ときっかけが入れ替わる
-  if(view==='tut'&&tutI===5&&!e.target.closest('button')){tutHint=!tutHint;renderTut();return;}
   if(view!=='arrive'||e.target.closest('button'))return;
   showHint=!showHint; renderArrive();
 });
+
+// T-6：文字盤の中の町名ときっかけは、タップなしで交互に入れ替わる
+setInterval(()=>{if(view==='tut'&&tutI===5){tutHint=!tutHint;renderTut();}},1600);
 
 // チュートリアル：左右にスワイプでめくる
 let sx=null,sy=0;
