@@ -192,7 +192,7 @@ const TUTS=[
   {map:'T3',ttl:'乗り物の日は、のりばから',body:'乗るのりばと発車時刻を伝えます。<br>間に合わないときは、再読み込みで次の便を探します。',inner:'<p class="t st" data-a="tut" data-y="-56">北大路駅</p><p class="t big" data-a="tut" data-y="12">3</p><p class="t mid" data-a="tut" data-y="74">番のりば</p>'},
   {map:'T4',ttl:'車内では、あと何駅かだけ',body:'進んだ分だけ、文字盤が染まっていきます。<br>降りる前にお知らせするので、外を見ていて大丈夫。',inner:'<p class="t label" data-a="tut" data-y="-48">乗車中</p><p class="t name" data-a="tut" data-y="4">あと 2 駅</p><p class="t tiny" data-a="tut" data-y="54">着く前にお知らせします</p>'},
   {map:'T5',ttl:'着いたら、町の名前がわかる',body:'コンパスの文字盤が、そのまま町の名前に変わります。',inner:'<p class="t label" data-a="tut" data-y="-48">今日の場所</p><p class="t name" data-a="tut" data-y="5">西賀茂</p><p class="t kana" data-a="tut" data-y="54">にしがも</p>'},
-  {map:'T6',ttl:'きっかけがほしいときは',body:'何を見て歩くか迷ったら、<em>画面をタップ</em>。<br>ひとことを手がかりに、歩いてみてください。<br>もう一度タップで戻ります。',inner:'<p class="t label" data-a="tut" data-y="-48">今日の場所</p><p class="t name" data-a="tut" data-y="5">西賀茂</p><p class="t kana" data-a="tut" data-y="54">にしがも</p>'},
+  {map:'T6',ttl:'きっかけがほしいときは',body:'何を見て歩くか迷ったら、<em>画面をタップ</em>。<br>町の名前が、ひとことに変わります。<br>それを手がかりに、歩いてみてください。<br>もう一度タップで戻ります。',inner:'<p class="t label" data-a="tut" data-y="-48">今日の場所</p><p class="t name" data-a="tut" data-y="5">西賀茂</p><p class="t kana" data-a="tut" data-y="54">にしがも</p>'},
 ];
 
 let W=0,H=0,dpr=1,cxp=0,cyp=0,A={},sT=1,bgs={};
@@ -323,7 +323,9 @@ const T6HINT='<p class="t label" data-a="tut" data-y="-48">きっかけ</p><p cl
 function renderTut(){
   const t=TUTS[tutI];
   if(tutI!==5)tutHint=false;
-  $('tin').innerHTML=tutI===5&&tutHint?T6HINT:t.inner; $('tt').textContent=t.ttl; $('tb').innerHTML=t.body;
+  $('tin').innerHTML=tutI===5&&tutHint?T6HINT:t.inner;
+  // T-6は4行あるので、少し上から詰めて置く
+  $('tb').dataset.y=tutI===5?'250':'260'; $('tb').style.lineHeight=tutI===5?'24px':''; $('tt').textContent=t.ttl; $('tb').innerHTML=t.body;
   [...$('tdots').children].forEach((d,i)=>d.className=i===tutI?'on':'');
   $('skip').hidden=tutI===5;
   $('main').textContent=tutI<5?'次へ':'はじめる';
