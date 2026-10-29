@@ -94,6 +94,20 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .rec .cut{margin-block:clamp(6px,1.4vh,12px)}
 .omakase{height:50px;border-radius:25px;border:1px solid var(--chip-line);background:none;font-size:15px}
 .ticket .center{text-align:center}
+.rec.detail{padding-bottom:24px}
+.rec.detail .ticket{margin-top:4px}
+.rec .btn{align-self:center;flex:none}
+/* P-18 これまでの片道切符 */
+.tlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;margin:0 -12px;padding:12px 12px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.trow{display:flex;align-items:stretch;min-height:90px;flex:none;padding:0;text-align:left;width:100%}
+.trow .l{width:104px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:8px;padding-left:16px;font-size:11px;color:var(--sub)}
+.trow .sep{border-left:1px dashed var(--chip-line);position:relative}
+.trow .sep::before,.trow .sep::after{content:"";position:absolute;left:-11px;width:20px;height:20px;border-radius:10px;background:var(--gap);border:1px solid var(--card-line)}
+.trow .sep::before{top:-11px}.trow .sep::after{bottom:-11px}
+.trow .r{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 16px 0 20px}
+.trow .r b{font-weight:400;font-size:24px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .r span{font-size:11px;color:var(--sub)}
+.empty{font-size:13px;color:var(--sub);text-align:center;margin-top:40px}
 .bottom.low{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
 .bottom{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 42px);display:flex;flex-direction:column;align-items:center;gap:10px;padding-inline:24px}
 button{font-family:var(--font);color:var(--ink);cursor:pointer}
@@ -101,7 +115,7 @@ button{font-family:var(--font);color:var(--ink);cursor:pointer}
 .btn.ink{background:var(--ink);color:var(--paper);border:0}
 .btn.paper{background:var(--pill);border:1px solid var(--pill-line)}
 button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-.tests{display:flex;gap:16px}
+.tests{display:flex;gap:16px;position:absolute;top:calc(100% + 4px)}
 .link{background:none;border:0;font-size:12px;color:var(--sub);text-decoration:underline;text-underline-offset:3px;padding:4px}
 .note{font-size:13px;color:var(--sub);text-align:center;line-height:1.6;max-width:320px;margin:0}
 </style>
@@ -170,10 +184,22 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <p class="t foot" data-y="255" id="a-foot">きっかけがほしいときは<br>画面をタップ</p>
 </section>
 
-<!-- P-17 今日の片道（記録） -->
+<!-- P-11〜P-14 公共交通の日（見た目だけ） -->
+<section id="v-ride" hidden><div id="rin"></div></section>
+
+<!-- P-18 これまでの片道切符 -->
+<section id="v-list" class="page" hidden>
+  <div class="bar"><button class="back" id="l-back" type="button" aria-label="戻る">&lt;</button></div>
+  <h1>これまでの片道切符</h1>
+  <p class="lead" style="margin-top:-8px">行った町は、あなたの「知っている範囲」に加わります。</p>
+  <div class="tlist" id="tlist"></div>
+</section>
+
+<!-- P-17 今日の片道（記録） / P-19 詳細 -->
 <section id="v-rec" class="page rec" hidden>
-  <h1>今日の片道</h1>
-  <p class="lead" style="margin-top:-8px">評価はつけません。歩いたことだけを残します。</p>
+  <div class="bar" id="r-bar" hidden><button class="back" id="r-back" type="button" aria-label="戻る">&lt;</button></div>
+  <h1 id="r-h1">今日の片道</h1>
+  <p class="lead" id="r-lead" style="margin-top:-8px">評価はつけません。歩いたことだけを残します。</p>
   <div class="card ticket">
     <div class="head"><b>片道切符</b><span id="r-no">No.0000</span></div>
     <small>今日の場所</small>
@@ -184,6 +210,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
     <div class="stats"><div><small>歩いた距離</small><b id="r-dist"></b></div><div><small>かかった時間</small><b id="r-time"></b></div></div>
     <div class="route" id="r-route"></div>
   </div>
+  <button class="btn paper" id="r-photo" type="button" hidden>この日の写真を見る</button>
 </section>
 
 <div class="bottom">
@@ -193,6 +220,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <div class="tests" id="tests" hidden>
     <button class="link" id="reroll" type="button">行き先を変える</button>
     <button class="link" id="arrived" type="button">着いたことにする</button>
+    <button class="link" id="tnext" type="button"></button>
   </div>
 </div>
 <script>
@@ -282,7 +310,18 @@ function layout(){
   A.boot=snap(H*385/852);
   place();
   bgs={compass:dialLayer(DIAL,true),plain:dialLayer(DIAL,false),search:dialLayer(DIAL6,false),
-       boot:layer(b=>paintMap(b,TUT.P01,cxp,A.boot))};
+       boot:layer(b=>paintMap(b,TUT.P01,cxp,A.boot)),
+       board:layer(b=>paintMap(b,TUT.T3,cxp,cyp)),ride:layer(b=>paintMap(b,TUT.T4,cxp,cyp)),
+       alight:layer(b=>{   // P-13：内側にだいだいの輪、外に赤い輪
+         const m=TUT.T1, rows=m.rows.map((row,r)=>[...row].map((t,k)=>{
+           if(t==='g')t='o'; const q=Math.hypot(r-m.cr,k-m.cc); return t==='o'&&Math.abs(q-20.3)<.55?'T':t;}).join(''));
+         paintMap(b,{...m,rows},cxp,cyp);
+         b.save(); b.translate(cxp,cyp);
+         for(let j=-26;j<=26;j++)for(let i=-26;i<=26;i++){const q=Math.hypot(i,j);if(Math.abs(q-24.6)<.55){
+           b.fillStyle=C.needleGap;b.fillRect(i*P,j*P,P,P);b.fillStyle=C.needleX;b.fillRect(i*P+D,j*P+D,P-D,P-D);b.fillStyle=C.needle;b.fillRect(i*P,j*P,D,D);}}
+         b.restore();
+       })};
+  bgs.change=bgs.board;
   TUTS.forEach((t,i)=>bgs['t'+i]=layer(b=>{
     paintMap(b,TUT[t.map],cxp,A.tut);
     if(t.line){  // 引き出し線
@@ -323,12 +362,15 @@ let view='boot', tutI=0, pos=null, heading=null, live=false, showHint=false, wat
 let cond={min:20,mode:'walk'}, ticketNo='0000';
 let shown=TH0;                        // 画面に出ている針の角度
 const rad=d=>d*Math.PI/180;
-const SPEED={walk:80,bike:250,train:80};   // m/分（公共交通の案内はまだなので徒歩と同じ）
+const SPEED={walk:80,bike:250,train:80};   // m/分（公共交通の案内は見た目だけなので、行き先の距離は徒歩と同じ）
+const ICHI={lat:35.0432,lng:135.7851};      // 記録の距離と時間は一乗寺駅からのだいたい（道なり≒直線の1.3倍）
+const RSPEED={walk:80,bike:250,train:300};
 
 // きっかけの一語（試し用。どの町にもありそうなもの）
 const HINTS=['坂の上','いちばん古い看板','手書きの文字','赤い扉','角の店','水の音','高い木','細い路地','花のある家','小さなお社','日なたのベンチ','色あせた壁','橋のたもと','においのする店','行き止まり','古い郵便受け'];
 
-const MAIN={tut:()=>tutI<5?'次へ':'はじめる',perm:'はじめる',cond:'出かける',ready:'歩きはじめる',arrive:'記録する',rec:'おわる'};
+const MAIN={tut:()=>tutI<5?'次へ':'はじめる',perm:'はじめる',cond:'出かける',ready:'歩きはじめる',arrive:'記録する',rec:'おわる',board:'再読み込み',change:'再読み込み'};
+const RIDE=['board','ride','alight','change'];
 function show(v){
   view=v; note('');
   $('v-boot').hidden=v!=='boot';
@@ -338,34 +380,79 @@ function show(v){
   $('v-search').hidden=v!=='search';
   $('v-compass').hidden=!(v==='ready'||v==='walk');
   $('v-arrive').hidden=v!=='arrive';
-  $('v-rec').hidden=v!=='rec';
+  $('v-rec').hidden=!(v==='rec'||v==='detail');
+  $('v-list').hidden=v!=='list';
+  $('v-ride').hidden=!RIDE.includes(v);
   $('photo').hidden=v!=='rec';
   $('skip').hidden=v!=='tut'||tutI===5;
-  $('ticket').hidden=!['search','ready','walk','arrive'].includes(v);
+  $('ticket').hidden=!['search','ready','walk','arrive',...RIDE].includes(v);
   const m=MAIN[v]; $('main').hidden=!m;
-  if(m){$('main').textContent=typeof m==='function'?m():m; $('main').className='btn '+(v==='arrive'?'paper':'ink');}
-  $('tests').hidden=v!=='walk';
+  if(m){$('main').textContent=typeof m==='function'?m():m; $('main').className='btn '+(['arrive','board','change'].includes(v)?'paper':'ink');}
+  $('tests').hidden=!(v==='walk'||RIDE.includes(v));
+  $('reroll').hidden=$('arrived').hidden=v!=='walk'; $('tnext').hidden=v==='walk';
   document.querySelector('.bottom').classList.toggle('low',v==='tut');
   $('ticket').textContent='片道切符 No.'+(dest?dest.no:ticketNo);
   if(v==='tut')renderTut();
   if(v==='cond'){ticketNo=String(Math.floor(Math.random()*9000)+1000);$('cno').textContent='No.'+ticketNo;}
   if(v==='arrive'){if(!dest.arrivedAt){dest.arrivedAt=Date.now();store.set('mm-dest2',dest);}renderArrive();}
-  if(v==='rec')renderRec();
+  if(v==='rec'){
+    if(dest.km==null){const km=distBear(ICHI,dest).d*1.3/1000;dest.km=km;dest.min=Math.max(1,Math.round(km*1000/RSPEED[dest.mode||'walk']));store.set('mm-dest2',dest);}
+    renderRec(dest,false);
+  }
+  if(v==='detail')renderRec(cur,true);
+  if(v==='list')renderList();
+  if(RIDE.includes(v)){if(v==='board'||v==='change')dep=Date.now()+(v==='board'?6:4)*60000;renderRide();}
   if(['walk','arrive','rec'].includes(v))store.set('mm-view',v);
   if(v==='cond')store.set('mm-view','cond');
 }
-function renderRec(){
-  const name=dest.name||'名前のない町';
-  $('r-no').textContent='No.'+dest.no;
+function renderRec(t,detail){
+  $('v-rec').classList.toggle('detail',detail);
+  $('r-bar').hidden=$('r-photo').hidden=!detail; $('r-h1').hidden=$('r-lead').hidden=detail;
+  const name=t.name||'名前のない町';
+  $('r-no').textContent='No.'+t.no;
   $('r-name').textContent=name;
   $('r-name').style.fontSize=name.length>4?Math.floor(230/name.length)+'px':'';
-  $('r-kana').textContent=dest.kana||'';
-  $('r-hint').textContent=dest.hint;
-  $('r-dist').textContent=((dest.walked||0)/1000).toFixed(1)+' km';
-  const min=dest.startAt?Math.max(1,Math.round(((dest.arrivedAt||Date.now())-dest.startAt)/60000)):0;
-  $('r-time').textContent=min+' 分';
-  const d=new Date(dest.arrivedAt||Date.now()), p2=n=>String(n).padStart(2,'0');
-  $('r-route').textContent=d.getFullYear()+'.'+p2(d.getMonth()+1)+'.'+p2(d.getDate())+'　'+(dest.from||'ここ')+' → '+name;
+  $('r-kana').textContent=t.kana||'';
+  $('r-hint').textContent=t.hint;
+  $('r-dist').textContent=(t.km||0).toFixed(1)+' km';
+  $('r-time').textContent=(t.min||0)+' 分';
+  $('r-route').textContent=ymd(t.arrivedAt)+'　一乗寺 → '+name;
+}
+const p2=n=>String(n).padStart(2,'0');
+function ymd(ms){const d=new Date(ms||Date.now());return d.getFullYear()+'.'+p2(d.getMonth()+1)+'.'+p2(d.getDate());}
+// P-18：これまでの片道切符
+let cur=null;
+function renderList(){
+  const log=store.get('mm-log')||[], box=$('tlist');
+  box.innerHTML=log.length?'':'<p class="empty">まだ片道切符はありません。</p>';
+  log.forEach(t=>{
+    const b=document.createElement('button'); b.type='button'; b.className='card trow';
+    b.innerHTML='<div class="l"><span></span><span></span></div><div class="sep"></div><div class="r"><b></b><span></span></div>';
+    const [no,date]=b.querySelectorAll('.l span');
+    no.textContent='No.'+t.no; date.textContent=ymd(t.arrivedAt);
+    b.querySelector('.r b').textContent=t.name||'名前のない町';
+    b.querySelector('.r span').textContent='きっかけ　'+t.hint;
+    b.addEventListener('click',()=>{cur=t;show('detail');});
+    box.appendChild(b);
+  });
+}
+// P-11〜P-14：公共交通の日（見た目だけ。のりばと時刻は試しの値）
+let dep=0;
+const RIDETXT={
+  board:['北大路駅','3'],change:['乗り換え','5'],
+  ride:'<p class="t label" data-y="-48">乗車中</p><p class="t name" data-y="4">あと 2 駅</p><p class="t tiny" data-y="54">着く前にお知らせします</p>',
+  alight:'<p class="t label" data-y="-48">次で</p><p class="t name" data-y="5">降ります</p><p class="t small" data-y="250">降りたら、またコンパスに戻ります</p>'};
+const NEXT={board:['ride','乗ったことにする'],ride:['alight','次で降りることにする'],alight:['change','降りたことにする'],change:['ready','乗り換えたことにする']};
+function renderRide(){
+  const v=view, r=RIDETXT[v];
+  if(typeof r==='string')$('rin').innerHTML=r;
+  else{
+    const d=new Date(dep), left=Math.max(0,Math.ceil((dep-Date.now())/60000));
+    $('rin').innerHTML='<p class="t st" data-y="-56">'+r[0]+'</p><p class="t big" data-y="12">'+r[1]+'</p><p class="t mid" data-y="74">番のりば</p>'+
+      '<p class="t dist" data-y="227">'+p2(d.getHours())+':'+p2(d.getMinutes())+' 発</p><p class="t small" data-y="278">あと '+left+' 分</p>';
+  }
+  $('tnext').textContent=NEXT[v][1];
+  place();
 }
 let tutHint=false;
 const T6HINT='<p class="t label" data-a="tut" data-y="-48">きっかけ</p><p class="t name" data-a="tut" data-y="5">坂の上</p><p class="t small" data-a="tut" data-y="54">西賀茂</p>';
@@ -466,7 +553,8 @@ async function decide(){
   pick.hint=HINTS[Math.floor(Math.random()*HINTS.length)];
   dest=pick; store.set('mm-dest2',dest);
   const wait=2600-(Date.now()-t0); if(wait>0)await new Promise(r=>setTimeout(r,wait));
-  showHint=false; shown=TH0; show('ready'); showText();
+  showHint=false; shown=TH0;
+  if(dest.mode==='train')show('board'); else{show('ready'); showText();}
 }
 let posWaiters=[], lastPt=null;
 function waitPos(){return pos?Promise.resolve():new Promise(r=>posWaiters.push(r));}
@@ -537,6 +625,9 @@ $('main').addEventListener('click',e=>{
   else if(view==='cond')decide();
   else if(view==='ready')go();
   else if(view==='arrive')show('rec');
+  else if(view==='board'||view==='change'){   // 再読み込み：間に合わなければ次の便
+    if(dep-Date.now()<2*60000)dep+=8*60000; renderRide();
+  }
   else if(view==='rec'){   // おわる：記録を残して、次の片道へ
     const log=store.get('mm-log')||[]; log.unshift(dest); store.set('mm-log',log);
     dest=null; lastPt=null; try{localStorage.removeItem('mm-dest2');}catch(e){}
@@ -556,7 +647,11 @@ $('omakase').addEventListener('click',()=>{
   cond.mode=['walk','bike'][Math.floor(Math.random()*2)];
   decide();
 });
-$('mine').addEventListener('click',()=>{note('これまでの切符はまだ作っていません');setTimeout(()=>note(''),1800);});
+$('mine').addEventListener('click',()=>show('list'));
+$('l-back').addEventListener('click',()=>show('cond'));
+$('r-back').addEventListener('click',()=>show('list'));
+$('r-photo').addEventListener('click',()=>{note('写真はまだ作っていません');setTimeout(()=>note(''),1800);});
+$('tnext').addEventListener('click',()=>{const n=NEXT[view][0];show(n);if(n==='ready')showText();});
 $('reroll').addEventListener('click',()=>show('cond'));
 $('photo').addEventListener('click',()=>{note('写真はまだ作っていません');setTimeout(()=>note(''),1800);});
 $('arrived').addEventListener('click',()=>{showHint=false;show('arrive');});
@@ -569,6 +664,7 @@ document.addEventListener('click',e=>{
 
 // T-6：文字盤の中の町名ときっかけは、タップなしで交互に入れ替わる
 setInterval(()=>{if(view==='tut'&&tutI===5){tutHint=!tutHint;renderTut();}},600);
+setInterval(()=>{if(view==='board'||view==='change')renderRide();},10000);
 
 // チュートリアル：左右にスワイプでめくる
 let sx=null,sy=0;
@@ -587,6 +683,7 @@ function tick(t){
   else if(view==='tut')cx.drawImage(bgs['t'+tutI],0,0,W,H);
   else if(view==='search'){cx.drawImage(bgs.search,0,0,W,H);drawSpark(t);}
   else if(view==='arrive')cx.drawImage(bgs.plain,0,0,W,H);
+  else if(bgs[view]&&RIDE.includes(view))cx.drawImage(bgs[view],0,0,W,H);
   else if(view==='ready'||view==='walk'){
     let target=shown;                                // P-07 では針は止まったまま
     if(view==='walk'&&pos&&dest&&heading!=null){
