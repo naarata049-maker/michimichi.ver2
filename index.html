@@ -177,7 +177,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <div class="card ticket">
     <div class="head"><b>片道切符</b><span id="r-no">No.0000</span></div>
     <small>今日の場所</small>
-    <div class="row"><div><div class="place" id="r-name"></div><div class="kana" id="r-kana"></div></div><div class="stamp">着</div></div>
+    <div class="row"><div><div class="place" id="r-name"></div><div class="kana" id="r-kana"></div></div></div>
     <div class="cut"></div>
     <small>きっかけ</small>
     <div class="hint" id="r-hint"></div>
@@ -383,7 +383,11 @@ function renderArrive(){
   const big=showHint?dest.hint:name;
   $('a-label').textContent=showHint?'きっかけ':'今日の場所';
   $('a-name').textContent=big;
-  $('a-name').style.fontSize=Math.min(40,Math.floor(210/big.length))+'px';
+  // きっかけも町名と同じ文字の大きさにする（長いときは2行に折り返す）
+  const size=Math.min(40,Math.floor(210/name.length));
+  $('a-name').style.fontSize=size+'px';
+  const wrap=big.length*size>230;
+  $('a-name').style.whiteSpace=wrap?'normal':''; $('a-name').style.width=wrap?'230px':''; $('a-name').style.margin=wrap?'0 auto':''; $('a-name').style.lineHeight=wrap?'1.15':'';
   $('a-sub').textContent=showHint?name:(dest.kana||'');
   $('a-sub').className='t '+(showHint?'small':'kana');
   $('a-foot').innerHTML=showHint?'もう一度タップで戻る':'きっかけがほしいときは<br>画面をタップ';
