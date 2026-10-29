@@ -318,9 +318,12 @@ function show(v){
   if(['walk','arrive'].includes(v))store.set('mm-view',v);
   if(v==='cond')store.set('mm-view','cond');
 }
+let tutHint=false;
+const T6HINT='<p class="t label" data-a="tut" data-y="-48">きっかけ</p><p class="t name" data-a="tut" data-y="5">坂の上</p><p class="t small" data-a="tut" data-y="54">西賀茂</p>';
 function renderTut(){
   const t=TUTS[tutI];
-  $('tin').innerHTML=t.inner; $('tt').textContent=t.ttl; $('tb').innerHTML=t.body;
+  if(tutI!==5)tutHint=false;
+  $('tin').innerHTML=tutI===5&&tutHint?T6HINT:t.inner; $('tt').textContent=t.ttl; $('tb').innerHTML=t.body;
   [...$('tdots').children].forEach((d,i)=>d.className=i===tutI?'on':'');
   $('skip').hidden=tutI===5;
   $('main').textContent=tutI<5?'次へ':'はじめる';
@@ -468,9 +471,22 @@ $('arrived').addEventListener('click',()=>{showHint=false;show('arrive');});
 // 到着画面：画面をタップできっかけ、もう一度で戻る
 document.addEventListener('click',e=>{
   if(view==='boot'){bootNext();return;}
+  // T-6：文字盤をタップすると、今日の場所ときっかけが入れ替わる
+  if(view==='tut'&&tutI===5&&!e.target.closest('button')){tutHint=!tutHint;renderTut();return;}
   if(view!=='arrive'||e.target.closest('button'))return;
   showHint=!showHint; renderArrive();
 });
+
+// チュートリアル：左右にスワイプでめくる
+let sx=null,sy=0;
+addEventListener('touchstart',e=>{if(view==='tut'){sx=e.touches[0].clientX;sy=e.touches[0].clientY;}},{passive:true});
+addEventListener('touchend',e=>{
+  if(view!=='tut'||sx==null)return;
+  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy; sx=null;
+  if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy))return;
+  if(dx<0&&tutI<5){tutI++;renderTut();}
+  else if(dx>0&&tutI>0){tutI--;renderTut();}
+},{passive:true});
 
 function tick(t){
   cx.clearRect(0,0,W,H);
