@@ -18,7 +18,8 @@
   --gap:#d3e8e0; --dot:#b2dfd9;
   --dial-gap:#ede9df; --dial-dot:#e7e2d6;
   --tick:#f3ae69; --needle:#ff0000; --tail:#c8c2b4;
-  --ink:#2e2c28; --paper:#f3f0e8; --sub:#8a857a; --pill:#ede9df; --pill-line:#cfc7b6;
+  --ink:#2e2c28; --paper:#f3f0e8; --card:#fbf8f1; --card-line:#e3ddd0; --chip-line:#d9d2c3;
+  --sub:#8a857a; --pill:#ede9df; --pill-line:#cfc7b6; --off:#ded7c6;
   --font:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
   color-scheme:light;
 }
@@ -26,8 +27,11 @@ html{background:var(--gap) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 [hidden]{display:none!important}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-.pill{position:fixed;top:max(40px,calc(env(safe-area-inset-top,0px) + 10px));left:max(24px,env(safe-area-inset-left,0px));padding:8px 15px;font-size:13px;background:var(--pill);border:1px solid var(--pill-line);border-radius:18px}
+.top{top:max(40px,calc(env(safe-area-inset-top,0px) + 10px))}
+.pill{position:fixed;left:max(24px,env(safe-area-inset-left,0px));padding:8px 15px;font-size:13px;background:var(--pill);border:1px solid var(--pill-line);border-radius:18px}
+.skip{position:fixed;right:max(16px,env(safe-area-inset-right,0px));background:none;border:0;font-size:14px;color:var(--sub);padding:8px}
 .t{position:fixed;left:0;right:0;margin:0;text-align:center;transform:translateY(-50%);white-space:nowrap}
+.t.from-top{transform:none}
 .dist{font-size:44px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .small{font-size:14px;color:var(--sub)}
 .label{font-size:15px;color:var(--sub);letter-spacing:.12em}
@@ -35,12 +39,55 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .kana{font-size:12px;color:var(--sub);letter-spacing:.5em;padding-left:.5em}
 .inside{font-size:17px;line-height:1.75;white-space:normal}
 .foot{font-size:13px;color:var(--sub);line-height:2.1;white-space:normal}
+.logo{font-size:44px;letter-spacing:.06em}
+.tag{font-size:14px}
+.ttl{font-size:22px;letter-spacing:.04em}
+.body{font-size:13px;color:var(--sub);line-height:25px;white-space:normal;padding-inline:24px}
+.body em{font-style:normal;color:var(--needle)}
+.qm{font-size:72px}
+.st{font-size:22px;letter-spacing:.12em}
+.big{font-size:64px;line-height:1}
+.mid{font-size:16px;letter-spacing:.12em}
+.tiny{font-size:12px;color:var(--sub)}
+.callout{position:fixed;font-size:12px;margin:0;transform:translateY(-50%);white-space:nowrap}
+.dots{position:fixed;left:0;right:0;display:flex;justify-content:center;gap:9px;transform:translateY(-50%)}
+.dots i{width:5px;height:5px;background:var(--pill-line)}
+.dots i.on{background:var(--ink)}
+/* P-04 / P-05 は上から流す画面 */
+.page{position:fixed;inset:0;padding-top:clamp(24px,calc(100dvh - 760px),96px);padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.page h1{font-weight:400;font-size:26px;line-height:1.5;margin:0;letter-spacing:.02em}
+.page .lead{font-size:13px;color:var(--sub);line-height:1.8;margin:0}
+.bar{display:flex;align-items:center;justify-content:space-between}
+.back{width:36px;height:36px;border-radius:18px;border:1px solid var(--pill-line);background:none;font-size:16px;padding:0}
+.card{background:var(--card);border:1px solid var(--card-line);border-radius:18px}
+.perm{display:flex;align-items:center;gap:12px;padding:22px 20px}
+.perm div{flex:1;min-width:0}
+.perm b{display:block;font-weight:400;font-size:16px;margin-bottom:8px}
+.perm span{font-size:12px;color:var(--sub)}
+.sw{width:44px;height:26px;border-radius:13px;border:0;background:var(--off);position:relative;flex:none;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--card);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--ink)}
+.sw[aria-checked="true"]::after{left:21px}
+.mine{background:var(--card);border:0;border-radius:18px;font-size:12px;padding:8px 14px;display:flex;align-items:center;gap:6px}
+.ticket{padding:24px 24px 18px;display:flex;flex-direction:column;gap:12px;position:relative;margin-top:22px}
+.ticket .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ticket .head b{font-weight:400;font-size:19px;letter-spacing:.12em}
+.ticket .head span,.ticket small{font-size:12px;color:var(--sub)}
+.ticket small{font-size:11px}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.chip{height:46px;border-radius:23px;border:1px solid var(--chip-line);background:none;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cut{border-top:1px dashed var(--chip-line);margin:10px -24px 18px;position:relative}
+.cut::before,.cut::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:10px;background:var(--gap);border:1px solid var(--card-line)}
+.cut::before{left:-11px}.cut::after{right:-11px}
+.omakase{height:50px;border-radius:25px;border:1px solid var(--chip-line);background:none;font-size:15px}
+.ticket .center{text-align:center}
 .bottom{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 42px);display:flex;flex-direction:column;align-items:center;gap:10px;padding-inline:24px}
 button{font-family:var(--font);color:var(--ink);cursor:pointer}
 .btn{width:100%;max-width:345px;height:54px;font-size:16px;border-radius:27px;letter-spacing:.04em}
 .btn.ink{background:var(--ink);color:var(--paper);border:0}
 .btn.paper{background:var(--pill);border:1px solid var(--pill-line)}
-.btn:focus-visible,.link:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .tests{display:flex;gap:16px}
 .link{background:none;border:0;font-size:12px;color:var(--sub);text-decoration:underline;text-underline-offset:3px;padding:4px}
 .note{font-size:13px;color:var(--sub);text-align:center;line-height:1.6;max-width:320px;margin:0}
@@ -48,7 +95,47 @@ button{font-family:var(--font);color:var(--ink);cursor:pointer}
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="pill" id="ticket">片道券 No.0000</div>
+<div class="pill top" id="ticket" hidden>片道券 No.0000</div>
+<button class="skip top" id="skip" type="button" hidden>スキップ</button>
+
+<!-- P-01 起動 -->
+<section id="v-boot" hidden>
+  <p class="t logo" data-a="boot" data-y="137">みちみち</p>
+  <p class="t tag" data-a="boot" data-y="185">知らない町ときっかけを、あなたに。</p>
+</section>
+
+<!-- T-1〜T-6 チュートリアル（文字盤の中と下の文） -->
+<section id="v-tut" hidden>
+  <div id="tin"></div>
+  <p class="t ttl" data-a="tut" data-y="212" id="tt"></p>
+  <p class="t body from-top" data-a="tut" data-y="260" id="tb"></p>
+  <div class="dots" data-a="tut" data-y="362" id="tdots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</section>
+
+<!-- P-04 位置情報と写真の利用 -->
+<section id="v-perm" class="page" hidden>
+  <div class="bar"><button class="back" id="back" type="button" aria-label="戻る">&lt;</button></div>
+  <h1>位置情報と写真の<br>利用</h1>
+  <p class="lead">どちらも任意です。<br>端末の中だけで使い、外へ送りません。</p>
+  <div class="card perm"><div><b>位置情報</b><span>いまの向きと距離を出すために使います。</span></div><button class="sw" id="sw-loc" type="button" role="switch" aria-checked="true" aria-label="位置情報"></button></div>
+  <div class="card perm"><div><b>写真</b><span>歩いた道に重ねて残すために使います。</span></div><button class="sw" id="sw-photo" type="button" role="switch" aria-checked="false" aria-label="写真"></button></div>
+</section>
+
+<!-- P-05 条件選択（片道券） -->
+<section id="v-cond" class="page" hidden>
+  <div class="bar"><h1>今日の片道</h1><button class="mine" id="mine" type="button"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="3" width="16" height="10" rx="2"/><path d="M4 1h11"/></svg>これまでの券</button></div>
+  <p class="lead" style="margin-top:-10px">時間と移動を選ぶと、片道券ができます。</p>
+  <div class="card ticket">
+    <div class="head"><b>片道券</b><span id="cno">No.0000</span></div>
+    <small>片道</small>
+    <div class="chips" id="c-time"><button class="chip" type="button" data-v="20" aria-pressed="true">〜20分</button><button class="chip" type="button" data-v="45" aria-pressed="false">〜45分</button><button class="chip" type="button" data-v="90" aria-pressed="false">〜90分</button></div>
+    <small>移動</small>
+    <div class="chips" id="c-mode"><button class="chip" type="button" data-v="walk" aria-pressed="true">徒歩</button><button class="chip" type="button" data-v="bike" aria-pressed="false">自転車</button><button class="chip" type="button" data-v="train" aria-pressed="false">公共交通</button></div>
+    <div class="cut"></div>
+    <button class="omakase" id="omakase" type="button">おまかせ</button>
+    <small class="center">条件を選ばなくても押せます。</small>
+  </div>
+</section>
 
 <!-- P-06 算出中 -->
 <section id="v-search" hidden>
@@ -72,8 +159,7 @@ button{font-family:var(--font);color:var(--ink);cursor:pointer}
 
 <div class="bottom">
   <p class="note" id="note" hidden></p>
-  <button class="btn ink" id="go" type="button" hidden>歩きはじめる</button>
-  <button class="btn paper" id="log" type="button" hidden>記録する</button>
+  <button class="btn ink" id="main" type="button" hidden></button>
   <div class="tests" id="tests" hidden>
     <button class="link" id="reroll" type="button">行き先を変える</button>
     <button class="link" id="arrived" type="button">着いたことにする</button>
@@ -86,9 +172,10 @@ const P=6, D=4;                 // 点の間隔と大きさ（Figmaと同じ）
 const DIAL=["                 googoTogoo                  ", "              ogogooooTooogoogo              ", "            ogooooooooToooooooogo            ", "          oTooooooooooTooooooooooTo          ", "         goTToooooooooooooooooooToog         ", "        ogooToooooooooooooooooooToooo        ", "       ggooooooooooooooooooooooooooogg       ", "      ooooooooooooooooooooooooooooooooo      ", "     ogooooooooooooooooooooooooooooooogo     ", "    gooooooooooooooooooooooooooooooooooog    ", "   ooooooooooooooooooooooooooooooooooooooo   ", "   TToooooooooooooooooooooooooooooooooooTT   ", "  ooTToooooooooooooooooooooooooooooooooTToo  ", "  gooooooooooooooooooooooooooooooooooooooog  ", " ooooooooooooooooooooooooooooooooooooooooooo ", " gooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "gooooooooooooooooooooooooooooooooooooooooooo ", "ooooooooooooooooooooooooooooooooooooooooooogo", "ooooooooooooooooooooooooooooooooooooooooooooo", "goooooooooooooooooooooooooooooooooooooooooogg", "ooooooooooooooooooooooooooooooooooooooooooooo", "TTTToooooooooooooooooooooooooooooooooooooTTTT", "ooooooooooooooooooooooooooooooooooooooooooooo", "goooooooooooooooooooooooooooooooooooooooooogg", "ooooooooooooooooooooooooooooooooooooooooooooo", "ooooooooooooooooooooooooooooooooooooooooooogo", "gooooooooooooooooooooooooooooooooooooooooooo ", " ooooooooooooooooooooooooooooooooooooooooooo ", " gooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "  gooooooooooooooooooooooooooooooooooooooog  ", "  ooTToooooooooooooooooooooooooooooooooTToo  ", "   TToooooooooooooooooooooooooooooooooooTT   ", "   ooooooooooooooooooooooooooooooooooooooo   ", "    gooooooooooooooooooooooooooooooooooog    ", "     ogooooooooooooooooooooooooooooooogo     ", "     ggooooooooooooooooooooooooooooooogg     ", "       ogooooooooooooooooooooooooooogo       ", "       gooooToooooooooooooooooooToooog       ", "         goTToooooooooooooooooooToog         ", "          oTooooooooooTooooooooooTo          ", "            ogooooooooToooooooogo            ", "              ogogooooTooogoogo              ", "                 googoTogoo                  "];
 const RED=[[3,-9],[2,-8],[3,-8],[2,-7],[3,-7],[1,-6],[2,-6],[3,-6],[1,-5],[2,-5],[0,-4],[1,-4],[2,-4],[-1,-3],[0,-3],[1,-3],[2,-3],[-1,-2],[0,-2],[1,-2],[2,-2],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[-1,0],[0,0],[1,0],[2,0],[2,1]];
 const GREY=[[-2,0],[-2,1],[-1,1],[0,1],[1,1],[-2,2],[-1,2],[0,2],[1,2],[-2,3],[-1,3],[0,3],[-3,4],[-2,4],[-1,4],[0,4],[-3,5],[-2,5],[-1,5],[-3,6],[-2,6],[-1,6],[-3,7],[-2,7],[-3,8],[-3,9]];
-// Figma P-06 算出中の文字盤と、ふちを回る色の点
 const DIAL6=["                 ooooogogoog                 ", "              oooooooogooogoogo              ", "            oooooooooogoooooooogo            ", "          oooooooooooogoooooooooogo          ", "         ooooooooooooooooooooooogoog         ", "       ooooooooooooooooooooooooogoooog       ", "       ooooooooooooooooooooooooooooogo       ", "     ooooooooooooooooooooooooooooooooogg     ", "     ooooooooooooooooooooooooooooooooogo     ", "    oooooooooooooooooooooooooooooooooooog    ", "   ooooooooooooooooooooooooooooooooooooooo   ", "   ooooooooooooooooooooooooooooooooooooogg   ", "  oooooooooooooooooooooooooooooooooooooggoo  ", "  oooooooooooooooooooooooooooooooooooooooog  ", " ooooooooooooooooooooooooooooooooooooooooooo ", " oooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "gooooooooooooooooooooooooooooooooooooooooooog", "ooooooooooooooooooooooooooooooooooooooooooooo", "ooooooooooooooooooooooooooooooooooooooooooooo", "gooooooooooooooooooooooooooooooooooooooooooog", "ooooooooooooooooooooooooooooooooooooooooooooo", "ggggooooooooooooooooooooooooooooooooooooogggg", "ooooooooooooooooooooooooooooooooooooooooooooo", "gooooooooooooooooooooooooooooooooooooooooooog", "ooooooooooooooooooooooooooooooooooooooooooooo", "ooooooooooooooooooooooooooooooooooooooooooooo", "gooooooooooooooooooooooooooooooooooooooooooog", " ooooooooooooooooooooooooooooooooooooooooooo ", " gooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "  gooooooooooooooooooooooooooooooooooooooog  ", "  ooggoooooooooooooooooooooooooooooooooggoo  ", "   ggooooooooooooooooooooooooooooooooooogg   ", "   ooooooooooooooooooooooooooooooooooooooo   ", "    gooooooooooooooooooooooooooooooooooog    ", "     ooooooooooooooooooooooooooooooooogo     ", "     ggooooooooooooooooooooooooooooooogg     ", "       goooooooooooooooooooooooooooogo       ", "       goooogooooooooooooooooooogoooog       ", "         goggooooooooooooooooooogoog         ", "          ogoooooooooogoooooooooogo          ", "            ogoooooooogoooooooogo            ", "              ogogoooogooogoogo              ", "                 googogogoog                 "];
 const SPARK=[[-5,-22,"#e69b80"],[-2,-22,"#d3a652"],[-7,-21,"#8db3be"],[-5,-21,"#e69b80"],[-9,-20,"#a3b55b"],[-11,-19,"#d3a652"],[-13,-18,"#e69b80"],[-11,-18,"#d3a652"],[-10,-18,"#d3a652"],[-15,-17,"#8db3be"],[-10,-17,"#d3a652"],[-15,-16,"#8db3be"],[-17,-15,"#a3b55b"],[-16,-15,"#a3b55b"],[-18,-13,"#d3a652"],[-19,-11,"#e69b80"],[-18,-11,"#e69b80"],[-18,-10,"#e69b80"],[-17,-10,"#e69b80"],[-20,-9,"#8db3be"]];
+// Figma P-01・T-1〜T-6 の文字盤（R 針 / G 針の後ろ / K 墨、cr・cc が中心）
+const TUT={"P01": {"rows": ["                          K                          ", "                         KKK                         ", "                       ooooooo                       ", "                     oooooTooooo                     ", "                   ogoooooTooooogo                   ", "                  ooogooooooooogooo                  ", "                 ooooooooooooooooooo                 ", "                ooooooooooooooooooooo                ", "                goooooooooooooRooooog                ", "               oogoooooooooooRooooogoo               ", "               oooooooooooooRRoooooooo               ", "              oooooooooooooRRoooooooooo              ", "              ooooooooooooRRRoooooooooo              ", "              oooooooooooRRRooooooooooo              ", "              oTTooooooooGRRooooooooTTo              ", "              oooooooooooGGGooooooooooo              ", "              ooooooooooGGGoooooooooooo              ", "              ooooooooooGGooooooooooooo              ", "               ooooooooGGooooooooooooo               ", "               oogoooooGooooooooooogoo               ", "                goooooGooooooooooooog                ", "                ooooooooooooooooooooo                ", "                 ooooooooooooooooooo                 ", "                  ooogooooooooogooo                  ", "                   ogoooooTooooogo                   ", "                     oooooTooooo                     ", "                       ooooooo                       "], "cr": 14, "cc": 26}, "T1": {"rows": ["                     googoTogoog                     ", "                  ogogooooTooogoogo                  ", "                ogooooooooToooooooogo                ", "              oTooooooooooTooooooooooTo              ", "             goTToooooooooooooooooooToog             ", "           gooooToooooooooooooooooooToooog           ", "           goooooooooooooooooooooooooooogo           ", "         ggooooooooooooooooooooooooooooooogg         ", "         ooooooooooooooooooooooooooooooooogo         ", "        gooooooooooooooooooooooooooooooooooog        ", "       ooooooooooooooooooooooooooooooooooooooo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "      gooooooooooooooooooooooooooooooooooooooog      ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "   TTTTToooooooooooooooooooooooooooooooooooooTTTT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "      gooooooooooooooooooooooooooooooooooooooog      ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       ooooooooooooooooooooooooooooooooooooooo       ", "        gooooooooooooooooooooooooooooooooooog        ", "         ooooooooooooooooooooooooooooooooogo         ", "         ggooooooooooooooooooooooooooooooogg         ", "           goooooooooooooooooooooooooooogo           ", "           gooooToooooooooooooooooooToooog           ", "             goTToooooooooooooooooooToog             ", "              oTooooooooooTooooooooooTo              ", "                ogooooooooToooooooogo                ", "                  ogogooooTooogoogo                  ", "                     googoTogoog                     "], "cr": 22, "cc": 26}, "T2": {"rows": ["                          K                          ", "                         KKK                         ", "                                                     ", "                       ogoTogo                       ", "                   gogoogoTogogoogo                  ", "                 gogooooooToooooooog                 ", "               TooooooooooTooooooooooT               ", "             goTToooooooooooooooooooToog             ", "            ogooToooooooooooooooooooToooo            ", "           ggooooooooooooooooooooooooooogo           ", "          gooooooooooooooooooooooooooooooog          ", "         ogooooooooooooooooooooooooooooooogo         ", "        goooooooooooooooooooooooooooooooooogg        ", "        ooooooooooooooooooooooooooooooooooooo        ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       oTToooooooooooooooooooooooooooooooooTTo       ", "      gooooooooooooooooooooooRoooooooooooooooog      ", "      ooooooooooooooooooooooRRooooooooooooooooo      ", "     gooooooooooooooooooooooRRoooooooooooooooogg     ", "     ooooooooooooooooooooooRRooooooooooooooooooo     ", "     ooooooooooooooooooooooRRooooooooooooooooooo     ", "     gooooooooooooooooooooRRRoooooooooooooooooog     ", "    oooooooooooooooooooooRRRRoooooooooooooooooooo    ", "    ggoooooooooooooooooooRRRRoooooooooooooooooogg    ", "    ooooooooooooooooooooRRRRRoooooooooooooooooooo    ", "    TTTTooooooooooooooooGRRRRooooooooooooooooTTTT    ", "    ooooooooooooooooooooGGGGRoooooooooooooooooooo    ", "    ggooooooooooooooooooGGGGooooooooooooooooooogg    ", "    ooooooooooooooooooooGGGoooooooooooooooooooooo    ", "     goooooooooooooooooGGGGoooooooooooooooooooog     ", "     ooooooooooooooooooGGGoooooooooooooooooooooo     ", "     ooooooooooooooooooGGGoooooooooooooooooooooo     ", "     goooooooooooooooooGGooooooooooooooooooooogg     ", "      oooooooooooooooooGooooooooooooooooooooooo      ", "      gooooooooooooooooGoooooooooooooooooooooog      ", "       oTToooooooooooooooooooooooooooooooooTTo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "        ooooooooooooooooooooooooooooooooooooo        ", "        goooooooooooooooooooooooooooooooooogg        ", "         ogooooooooooooooooooooooooooooooogo         ", "          gooooooooooooooooooooooooooooooog          ", "           ggooooooooooooooooooooooooooogo           ", "            ogooToooooooooooooooooooToooo            ", "             goTToooooooooooooooooooToog             ", "               TooooooooooTooooooooooT               ", "                 gogooooooToooooooog                 ", "                   gogoogoTogogoog                   ", "                       ogoTogo                       "], "cr": 25, "cc": 26}, "T3": {"rows": ["                     googoTogoog                     ", "                  ogogooooTooogoogo                  ", "                ogooooooooToooooooogo                ", "              oTooooooooooTooooooooooTo              ", "             goTToooooooooooooooooooToog             ", "           gooooToooooooooooooooooooToooog           ", "           goooooooooooooooooooooooooooogo           ", "         ggooooooooooooooooooooooooooooooogg         ", "         ooooooooooooooooooooooooooooooooogo         ", "        gooooooooooooooooooooooooooooooooooog        ", "       ooooooooooooooooooooooooooooooooooooooo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "      gooooooooooooooooooooooooooooooooooooooog      ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "   TTTTToooooooooooooooooooooooooooooooooooooTTTT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "      gooooooooooooooooooooooooooooooooooooooog      ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       ooooooooooooooooooooooooooooooooooooooo       ", "        gooooooooooooooooooooooooooooooooooog        ", "         ooooooooooooooooooooooooooooooooogo         ", "         ggooooooooooooooooooooooooooooooogg         ", "           goooooooooooooooooooooooooooogo           ", "           gooooToooooooooooooooooooToooog           ", "             goTToooooooooooooooooooToog             ", "              oTooooooooooTooooooooooTo              ", "                ogooooooooToooooooogo                ", "                  ogogooooTooogoogo                  ", "                     googoTogoog                     "], "cr": 22, "cc": 26}, "T4": {"rows": ["                     googoToTooT                     ", "                  ogogooooToooTooTo                  ", "                ogooooooooTooooooooTo                ", "              oTooooooooooTooooooooooTo              ", "             goTToooooooooooooooooooTooT             ", "           gooooToooooooooooooooooooTooooT           ", "           gooooooooooooooooooooooooooooTo           ", "         ggoooooooooooooooooooooooooooooooTT         ", "         oooooooooooooooooooooooooooooooooTo         ", "        goooooooooooooooooooooooooooooooooooT        ", "       ooooooooooooooooooooooooooooooooooooooo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "      goooooooooooooooooooooooooooooooooooooooT      ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     goooooooooooooooooooooooooooooooooooooooooT     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "    goooooooooooooooooooooooooooooooooooooooooooT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    goooooooooooooooooooooooooooooooooooooooooooT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "   TTTTToooooooooooooooooooooooooooooooooooooTTTT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    goooooooooooooooooooooooooooooooooooooooooooT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    goooooooooooooooooooooooooooooooooooooooooooT    ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     goooooooooooooooooooooooooooooooooooooooooT     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "      goooooooooooooooooooooooooooooooooooooooT      ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       ooooooooooooooooooooooooooooooooooooooo       ", "        goooooooooooooooooooooooooooooooooooT        ", "         oooooooooooooooooooooooooooooooooTo         ", "         ggoooooooooooooooooooooooooooooooTT         ", "           gooooooooooooooooooooooooooooTo           ", "           gooooToooooooooooooooooooTooooT           ", "             goTToooooooooooooooooooTooT             ", "              oTooooooooooTooooooooooTo              ", "                ogooooooooToooooooogo                ", "                  ogogooooTooogoogo                  ", "                     googoTogoog                     "], "cr": 22, "cc": 26}, "T5": {"rows": ["                     googoTogoog                     ", "                  ogogooooTooogoogo                  ", "                ogooooooooToooooooogo                ", "              oTooooooooooTooooooooooTo              ", "             goTToooooooooooooooooooToog             ", "           gooooToooooooooooooooooooToooog           ", "           goooooooooooooooooooooooooooogo           ", "         ggooooooooooooooooooooooooooooooogg         ", "         ooooooooooooooooooooooooooooooooogo         ", "        gooooooooooooooooooooooooooooooooooog        ", "       ooooooooooooooooooooooooooooooooooooooo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "      gooooooooooooooooooooooooooooooooooooooog      ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "   TTTTToooooooooooooooooooooooooooooooooooooTTTT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "      gooooooooooooooooooooooooooooooooooooooog      ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       ooooooooooooooooooooooooooooooooooooooo       ", "        gooooooooooooooooooooooooooooooooooog        ", "         ooooooooooooooooooooooooooooooooogo         ", "         ggooooooooooooooooooooooooooooooogg         ", "           goooooooooooooooooooooooooooogo           ", "           gooooToooooooooooooooooooToooog           ", "             goTToooooooooooooooooooToog             ", "              oTooooooooooTooooooooooTo              ", "                ogooooooooToooooooogo                ", "                  ogogooooTooogoogo                  ", "                     googoTogoog                     "], "cr": 22, "cc": 26}, "T6": {"rows": ["                     googoTogoog                     ", "                  ogogooooTooogoogo                  ", "                ogooooooooToooooooogo                ", "              oTooooooooooTooooooooooTo              ", "             goTToooooooooooooooooooToog             ", "           gooooToooooooooooooooooooToooog           ", "           goooooooooooooooooooooooooooogo           ", "         ggooooooooooooooooooooooooooooooogg         ", "         ooooooooooooooooooooooooooooooooogo         ", "        gooooooooooooooooooooooooooooooooooog        ", "       ooooooooooooooooooooooooooooooooooooooo       ", "       TToooooooooooooooooooooooooooooooooooTT       ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "      gooooooooooooooooooooooooooooooooooooooog      ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "   TTTTToooooooooooooooooooooooooooooooooooooTTTT    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    ooooooooooooooooooooooooooooooooooooooooooooo    ", "    gooooooooooooooooooooooooooooooooooooooooooog    ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "     gooooooooooooooooooooooooooooooooooooooooog     ", "     ooooooooooooooooooooooooooooooooooooooooooo     ", "      gooooooooooooooooooooooooooooooooooooooog      ", "      ooTToooooooooooooooooooooooooooooooooTToo      ", "       TToooooooooooooooooooooooooooooooooooTT       ", "       ooooooooooooooooooooooooooooooooooooooo       ", "        gooooooooooooooooooooooooooooooooooog        ", "         ooooooooooooooooooooooooooooooooogo         ", "         ggooooooooooooooooooooooooooooooogg         ", "           goooooooooooooooooooooooooooogo           ", "           gooooToooooooooooooooooooToooog           ", "             goTToooooooooooooooooooToog             ", "              oTooooooooooTooooooooooTo              ", "                ogooooooooToooooooogo                ", "                  ogogooooTooogoogo                  ", "                     googoTogoog                     "], "cr": 22, "cc": 26}};
 const TH0=Math.atan2(3,9);       // Figmaでの針の向き
 const cv=document.getElementById('c'), cx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
@@ -98,23 +185,53 @@ const C={dg:css('--dial-gap'),dd:css('--dial-dot'),tick:css('--tick'),grey:'#cfc
   needleGap:'#f97874',needleX:'#f6b4ae',tailGap:'#ded9ce',tailX:'#e8e5db',tickGap:'#f3cfa8',ink:css('--ink')};
 const redSet=new Set(RED.map(p=>p+'')), greySet=new Set(GREY.map(p=>p+''));
 
-let W=0,H=0,dpr=1,cxp=0,cyp=0,bgs={};
-function dialLayer(map,arrow){
-  const c=document.createElement('canvas'); c.width=W*dpr; c.height=H*dpr;
-  const b=c.getContext('2d'); b.setTransform(dpr,0,0,dpr,0,0);
-  map.forEach((row,r)=>{for(let k=0;k<row.length;k++){
+// チュートリアル6枚の中身
+const TUTS=[
+  {map:'T1',ttl:'知らない町へ、片道だけ。',body:'あなたがまだ歩いたことのない町を、ひとつ選びます。<br>行き先は、着くまで秘密です。',inner:'<p class="t qm" data-a="tut" data-y="0">?</p>'},
+  {map:'T2',ttl:'渡すのは、方角と距離だけ',body:'針が行き先の方角、▲ はあなたの正面です。<br>針を ▲ にそろえるように歩いてください。',inner:'<p class="t tiny" data-a="tut" data-y="-175" style="color:var(--ink)">あなたの向き</p><p class="callout" data-a="tut" data-y="-145" data-x="103">行き先の方角</p>',line:true},
+  {map:'T3',ttl:'乗り物の日は、のりばから',body:'乗るのりばと発車時刻を伝えます。<br>間に合わないときは、再読み込みで次の便を探します。',inner:'<p class="t st" data-a="tut" data-y="-56">北大路駅</p><p class="t big" data-a="tut" data-y="12">3</p><p class="t mid" data-a="tut" data-y="74">番のりば</p>'},
+  {map:'T4',ttl:'車内では、あと何駅かだけ',body:'進んだ分だけ、文字盤が染まっていきます。<br>降りる前にお知らせするので、外を見ていて大丈夫。',inner:'<p class="t label" data-a="tut" data-y="-48">乗車中</p><p class="t name" data-a="tut" data-y="4">あと 2 駅</p><p class="t tiny" data-a="tut" data-y="54">着く前にお知らせします</p>'},
+  {map:'T5',ttl:'着いたら、町の名前がわかる',body:'コンパスの文字盤が、そのまま町の名前に変わります。',inner:'<p class="t label" data-a="tut" data-y="-48">今日の場所</p><p class="t name" data-a="tut" data-y="5">西賀茂</p><p class="t kana" data-a="tut" data-y="54">にしがも</p>'},
+  {map:'T6',ttl:'きっかけがほしいときは',body:'何を見て歩くか迷ったら、<em>画面をタップ</em>。<br>ひとことを手がかりに、歩いてみてください。<br>もう一度タップで戻ります。',inner:'<p class="t label" data-a="tut" data-y="-48">今日の場所</p><p class="t name" data-a="tut" data-y="5">西賀茂</p><p class="t kana" data-a="tut" data-y="54">にしがも</p>'},
+];
+
+let W=0,H=0,dpr=1,cxp=0,cyp=0,A={},sT=1,bgs={};
+// 点の地図を描く（中心の点の左上が x0,y0）
+function paintMap(b,m,x0,y0){
+  m.rows.forEach((row,r)=>{for(let k=0;k<row.length;k++){
     const t=row[k]; if(t===' ')continue;
-    const x=cxp+(k-22)*P, y=cyp+(r-22)*P;
-    b.fillStyle=t==='T'?C.tickGap:C.dg; b.fillRect(x,y,P,P);
-    b.fillStyle=t==='T'?C.tickGap:C.cross; b.fillRect(x+D,y+D,P-D,P-D);
-    b.fillStyle=t==='T'?C.tick:t==='g'?C.grey:C.dd; b.fillRect(x,y,D,D);
+    const x=x0+(k-m.cc)*P, y=y0+(r-m.cr)*P;
+    if(t==='K'){b.fillStyle=C.ink;b.fillRect(x,y,D,D);continue;}
+    const g={T:C.tickGap,R:C.needleGap,G:C.tailGap}[t]||C.dg, x2={T:C.tickGap,R:C.needleX,G:C.tailX}[t]||C.cross;
+    b.fillStyle=g; b.fillRect(x,y,P,P);
+    b.fillStyle=x2; b.fillRect(x+D,y+D,P-D,P-D);
+    b.fillStyle={T:C.tick,g:C.grey,R:C.needle,G:C.tail}[t]||C.dd; b.fillRect(x,y,D,D);
   }});
-  if(arrow){  // ▲ 自分の向き（真上で固定）
-    b.fillStyle=C.ink;
-    b.fillRect(cxp,cyp-25*P,D,D);
-    for(let d=-1;d<=1;d++)b.fillRect(cxp+d*P,cyp-24*P,D,D);
-  }
-  return c;
+}
+function layer(fn){
+  const c=document.createElement('canvas'); c.width=W*dpr; c.height=H*dpr;
+  const b=c.getContext('2d'); b.setTransform(dpr,0,0,dpr,0,0); fn(b); return c;
+}
+function dialLayer(map,arrow){
+  return layer(b=>{
+    paintMap(b,{rows:map,cr:22,cc:22},cxp,cyp);
+    if(arrow){  // ▲ 自分の向き（真上で固定）
+      b.fillStyle=C.ink;
+      b.fillRect(cxp,cyp-25*P,D,D);
+      for(let d=-1;d<=1;d++)b.fillRect(cxp+d*P,cyp-24*P,D,D);
+    }
+  });
+}
+function place(){
+  document.querySelectorAll('[data-y]').forEach(el=>{
+    const a=el.dataset.a, y=+el.dataset.y;
+    let top;
+    if(a==='tut')top=A.tut+2+(y>135?135+(y-135)*sT:y);
+    else if(a==='boot')top=A.boot+2+y*Math.min(1,H/852);
+    else top=cyp+2+y;
+    el.style.top=top+'px';
+    if(el.dataset.x)el.style.left=(cxp+2+ +el.dataset.x)+'px';
+  });
 }
 function layout(){
   dpr=Math.min(window.devicePixelRatio||1,3);
@@ -123,12 +240,25 @@ function layout(){
   const ox=(((Math.round(W/2)-2)%P)+P)%P;                 // 真ん中に点の列が来るように
   document.documentElement.style.backgroundPosition=ox+'px 0';
   cxp=Math.round(W/2)-2;                                  // 中心の点の左上
-  // 文字盤の高さ：Figmaと同じ割合を基本に、下の文字がボタンにかからない高さまで上げる
   const btnTop=document.querySelector('.bottom').getBoundingClientRect().bottom-54;
-  const ideal=H*410/852, maxC=btnTop-16-282, minC=250;
-  cyp=Math.round((Math.max(minC,Math.min(ideal,maxC))-2)/P)*P;
-  document.querySelectorAll('[data-y]').forEach(el=>el.style.top=(cyp+2+ +el.dataset.y)+'px');
-  bgs={compass:dialLayer(DIAL,true),plain:dialLayer(DIAL,false),search:dialLayer(DIAL6,false)};
+  const snap=v=>Math.round((v-2)/P)*P;
+  // コンパスの画面：Figmaと同じ割合を基本に、下の文字がボタンにかからない高さまで上げる
+  cyp=snap(Math.max(250,Math.min(H*410/852,btnTop-16-282)));
+  // チュートリアル：文字盤を上げ、それでも足りなければ下の文の間を詰める
+  A.tut=snap(Math.max(262,Math.min(H*356/852,btnTop-22-362)));
+  sT=Math.max(.5,Math.min(1,(btnTop-22-A.tut-135)/227));
+  A.boot=snap(H*385/852);
+  place();
+  bgs={compass:dialLayer(DIAL,true),plain:dialLayer(DIAL,false),search:dialLayer(DIAL6,false),
+       boot:layer(b=>paintMap(b,TUT.P01,cxp,A.boot))};
+  TUTS.forEach((t,i)=>bgs['t'+i]=layer(b=>{
+    paintMap(b,TUT[t.map],cxp,A.tut);
+    if(t.line){  // 引き出し線
+      b.strokeStyle=C.ink; b.lineWidth=1; b.beginPath();
+      const x=cxp+2, y=A.tut+2;
+      b.moveTo(x+27,y-74); b.lineTo(x+55,y-145); b.lineTo(x+100,y-145); b.stroke();
+    }
+  }));
 }
 
 function cell(x,y,dot,gap,cross){
@@ -156,25 +286,45 @@ function drawSpark(t){
 
 // ---- 状態 ----
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let dest=store.get('mm-dest2');      // {lat,lng,no,name,kana,hint}
-let view='search', pos=null, heading=null, live=false, showHint=false;
+let dest=store.get('mm-dest2');      // {lat,lng,no,name,kana,hint,mode}
+let view='boot', tutI=0, pos=null, heading=null, live=false, showHint=false, watching=false;
+let cond={min:20,mode:'walk'}, ticketNo='0000';
 let shown=TH0;                        // 画面に出ている針の角度
 const rad=d=>d*Math.PI/180;
+const SPEED={walk:80,bike:250,train:80};   // m/分（公共交通の案内はまだなので徒歩と同じ）
 
 // きっかけの一語（試し用。どの町にもありそうなもの）
 const HINTS=['坂の上','いちばん古い看板','手書きの文字','赤い扉','角の店','水の音','高い木','細い路地','花のある家','小さなお社','日なたのベンチ','色あせた壁','橋のたもと','においのする店','行き止まり','古い郵便受け'];
 
+const MAIN={tut:()=>tutI<5?'次へ':'はじめる',perm:'はじめる',cond:'出かける',ready:'歩きはじめる',arrive:'記録する'};
 function show(v){
   view=v; note('');
+  $('v-boot').hidden=v!=='boot';
+  $('v-tut').hidden=v!=='tut';
+  $('v-perm').hidden=v!=='perm';
+  $('v-cond').hidden=v!=='cond';
   $('v-search').hidden=v!=='search';
   $('v-compass').hidden=!(v==='ready'||v==='walk');
-  $('v-arrive').hidden=!(v==='arrive');
-  $('go').hidden=v!=='ready';
-  $('log').hidden=v!=='arrive';
+  $('v-arrive').hidden=v!=='arrive';
+  $('skip').hidden=v!=='tut'||tutI===5;
+  $('ticket').hidden=!['search','ready','walk','arrive'].includes(v);
+  const m=MAIN[v]; $('main').hidden=!m;
+  if(m){$('main').textContent=typeof m==='function'?m():m; $('main').className='btn '+(v==='arrive'?'paper':'ink');}
   $('tests').hidden=v!=='walk';
-  $('ticket').textContent='片道券 No.'+(dest?dest.no:'0000');
+  $('ticket').textContent='片道券 No.'+(dest?dest.no:ticketNo);
+  if(v==='tut')renderTut();
+  if(v==='cond'){ticketNo=String(Math.floor(Math.random()*9000)+1000);$('cno').textContent='No.'+ticketNo;}
   if(v==='arrive')renderArrive();
-  if(v!=='search'&&v!=='ready')store.set('mm-view',v);
+  if(['walk','arrive'].includes(v))store.set('mm-view',v);
+  if(v==='cond')store.set('mm-view','cond');
+}
+function renderTut(){
+  const t=TUTS[tutI];
+  $('tin').innerHTML=t.inner; $('tt').textContent=t.ttl; $('tb').innerHTML=t.body;
+  [...$('tdots').children].forEach((d,i)=>d.className=i===tutI?'on':'');
+  $('skip').hidden=tutI===5;
+  $('main').textContent=tutI<5?'次へ':'はじめる';
+  place();
 }
 function renderArrive(){
   const name=dest.name||'名前のない町';
@@ -218,19 +368,20 @@ async function townName(p){
   if(a){const n=a.neighbourhood||a.quarter||a.suburb||a.hamlet||a.village||a.town;if(n)return {name:n,kana:''};}
   return null;
 }
-// 行き先を決める：今いる場所から1.2〜1.8km先の、名前のある町
+// 行き先を決める：選んだ時間と移動で行ける距離の、名前のある町
 async function decide(){
-  show('search'); note('');
+  show('search');
   const t0=Date.now();
   if(!pos){note('位置をさがしています…');await waitPos();note('');}
+  const far=()=>cond.min*SPEED[cond.mode]*(0.6+Math.random()*0.3);
   let pick=null;
   for(let n=0;n<5&&!pick;n++){
-    const p=offset(pos,1200+Math.random()*600,Math.random()*2*Math.PI);
+    const p=offset(pos,far(),Math.random()*2*Math.PI);
     const t=await townName(p);
     if(t)pick={...p,...t};
   }
-  if(!pick){const p=offset(pos,1500,Math.random()*2*Math.PI);pick={...p,name:'',kana:''};}
-  pick.no=String(Math.floor(Math.random()*9000)+1000);
+  if(!pick){const p=offset(pos,far(),Math.random()*2*Math.PI);pick={...p,name:'',kana:''};}
+  pick.no=ticketNo; pick.mode=cond.mode;
   pick.hint=HINTS[Math.floor(Math.random()*HINTS.length)];
   dest=pick; store.set('mm-dest2',dest);
   const wait=2600-(Date.now()-t0); if(wait>0)await new Promise(r=>setTimeout(r,wait));
@@ -239,6 +390,7 @@ async function decide(){
 let posWaiters=[];
 function waitPos(){return pos?Promise.resolve():new Promise(r=>posWaiters.push(r));}
 function watch(){
+  if(watching)return; watching=true;
   if(!navigator.geolocation){note('この端末では位置がわかりません。');return;}
   navigator.geolocation.watchPosition(p=>{
     pos={lat:p.coords.latitude,lng:p.coords.longitude};
@@ -258,7 +410,8 @@ function showText(){
   const {d}=distBear(pos,dest);
   if(view==='walk'&&d<50){showHint=false;show('arrive');return;}
   $('dist').textContent=fmt(d);
-  $('walk').textContent='徒歩 約'+Math.max(1,Math.ceil(d/80))+'分';
+  const m=dest.mode||'walk';
+  $('walk').textContent=(m==='bike'?'自転車':'徒歩')+' 約'+Math.max(1,Math.ceil(d/SPEED[m]))+'分';
 }
 
 function onOri(e){
@@ -284,20 +437,48 @@ async function go(){
   show('walk'); showText();
   try{await navigator.wakeLock.request('screen')}catch(e){}
 }
-$('go').addEventListener('click',go);
-$('reroll').addEventListener('click',decide);
+function startWalk(){store.set('mm-tut',true);show('cond');}
+$('main').addEventListener('click',e=>{
+  e.stopPropagation();
+  if(view==='tut'){if(tutI<5){tutI++;renderTut();}else show('perm');}
+  else if(view==='perm'){
+    if($('sw-loc').getAttribute('aria-checked')!=='true'){note('コンパスを動かすには、位置情報が必要です。');return;}
+    watch(); startWalk();
+  }
+  else if(view==='cond')decide();
+  else if(view==='ready')go();
+  else if(view==='arrive'){note('記録はまだ作っていません');setTimeout(()=>note(''),1800);}
+});
+$('skip').addEventListener('click',()=>show('perm'));
+$('back').addEventListener('click',()=>{tutI=5;show('tut');});
+['sw-loc','sw-photo'].forEach(id=>$(id).addEventListener('click',e=>{const b=e.currentTarget;b.setAttribute('aria-checked',b.getAttribute('aria-checked')==='true'?'false':'true');}));
+['c-time','c-mode'].forEach(id=>$(id).addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b)return;
+  [...$(id).children].forEach(c=>c.setAttribute('aria-pressed',c===b?'true':'false'));
+  if(id==='c-time')cond.min=+b.dataset.v; else cond.mode=b.dataset.v;
+}));
+$('omakase').addEventListener('click',()=>{
+  cond.min=[20,45,90][Math.floor(Math.random()*3)];
+  cond.mode=['walk','bike'][Math.floor(Math.random()*2)];
+  decide();
+});
+$('mine').addEventListener('click',()=>{note('これまでの券はまだ作っていません');setTimeout(()=>note(''),1800);});
+$('reroll').addEventListener('click',()=>show('cond'));
 $('arrived').addEventListener('click',()=>{showHint=false;show('arrive');});
-$('log').addEventListener('click',e=>{e.stopPropagation();note('記録はまだ作っていません');setTimeout(()=>note(''),1800);});
 // 到着画面：画面をタップできっかけ、もう一度で戻る
 document.addEventListener('click',e=>{
+  if(view==='boot'){bootNext();return;}
   if(view!=='arrive'||e.target.closest('button'))return;
   showHint=!showHint; renderArrive();
 });
 
 function tick(t){
-  if(view==='search'){cx.clearRect(0,0,W,H);cx.drawImage(bgs.search,0,0,W,H);drawSpark(t);}
-  else if(view==='arrive'){cx.clearRect(0,0,W,H);cx.drawImage(bgs.plain,0,0,W,H);}
-  else{
+  cx.clearRect(0,0,W,H);
+  if(view==='boot')cx.drawImage(bgs.boot,0,0,W,H);
+  else if(view==='tut')cx.drawImage(bgs['t'+tutI],0,0,W,H);
+  else if(view==='search'){cx.drawImage(bgs.search,0,0,W,H);drawSpark(t);}
+  else if(view==='arrive')cx.drawImage(bgs.plain,0,0,W,H);
+  else if(view==='ready'||view==='walk'){
     let target=shown;                                // P-07 では針は止まったまま
     if(view==='walk'&&pos&&dest&&heading!=null){
       target=rad(distBear(pos,dest).b-heading);
@@ -305,18 +486,24 @@ function tick(t){
     }
     let d=target-shown; d=Math.atan2(Math.sin(d),Math.cos(d));
     shown+=d*0.15;
-    cx.clearRect(0,0,W,H);cx.drawImage(bgs.compass,0,0,W,H);drawNeedle(shown);
+    cx.drawImage(bgs.compass,0,0,W,H);drawNeedle(shown);
   }
   requestAnimationFrame(tick);
 }
+// 起動のあと：はじめてならチュートリアル、2回目からは条件選択。歩いている途中なら続きから
+let booted=false;
+function bootNext(){
+  if(booted)return; booted=true;
+  const last=store.get('mm-view');
+  if(dest&&last==='arrive'){watch();show('arrive');}
+  else if(dest&&last==='walk'){watch();show('ready');showText();}
+  else if(store.get('mm-tut')){watch();show('cond');}
+  else{tutI=0;show('tut');}
+}
 addEventListener('resize',layout);
 layout();
-watch();
-// 前の続き：着いた後ならその画面、歩いている途中なら P-07 から（方角の許可にタップがいるため）
-const last=store.get('mm-view');
-if(dest&&last==='arrive')show('arrive');
-else if(dest&&last==='walk'){show('ready');}
-else decide();
+show('boot');
+setTimeout(bootNext,1800);
 requestAnimationFrame(tick);
 })();
 </script>
