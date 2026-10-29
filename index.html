@@ -80,6 +80,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
  /* P-05 ためし２：見える範囲の上から54px、切符は156px、ボタンは下から29px */
 #v-cond{padding-top:clamp(24px,calc(100dvh - 637px),54px)}
 #c-lead{margin-top:-5px}
+#v-cond h1,#c-lead{margin-left:12px}
+#v-cond .menu-btn{margin-right:-6px}
+#v-cond .menu{right:max(18px,calc(env(safe-area-inset-right,0px) - 6px))}
 #v-cond .ticket{margin-top:17px}
 .bottom.cond{bottom:calc(env(safe-area-inset-bottom,0px) + 29px)}
 .shade{position:fixed;inset:0;background:rgba(46,44,40,.28);z-index:5}
