@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#d3e8e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="みちみち">
 <title>みちみち</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,9 +23,10 @@
   --font:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
   color-scheme:light;
 }
-html,body{margin:0;height:100%;overflow:hidden;background:var(--gap);color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html{background:var(--gap) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='6' height='6' fill='%23d3e8e0'/%3E%3Crect width='4' height='4' fill='%23b2dfd9'/%3E%3Crect x='4' y='4' width='2' height='2' fill='%23e3ece4'/%3E%3C/svg%3E") 0 0/6px 6px repeat}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-.pill{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);left:max(24px,env(safe-area-inset-left,0px));padding:8px 15px;font-size:13px;background:var(--pill);border:1px solid var(--pill-line);border-radius:18px}
+.pill{position:fixed;top:max(40px,calc(env(safe-area-inset-top,0px) + 10px));left:max(24px,env(safe-area-inset-left,0px));padding:8px 15px;font-size:13px;background:var(--pill);border:1px solid var(--pill-line);border-radius:18px}
 .dist{position:fixed;left:0;right:0;text-align:center;font-size:44px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .walk{position:fixed;left:0;right:0;text-align:center;font-size:14px;color:var(--sub)}
 .bottom{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 42px);display:flex;flex-direction:column;align-items:center;gap:14px;padding-inline:24px}
@@ -45,61 +50,59 @@ button{font-family:var(--font);color:var(--ink);cursor:pointer}
 <script>
 (()=>{
 const P=6, D=4;                 // 点の間隔と大きさ（Figmaと同じ）
-const R=22.4;                   // 文字盤の半径（点の数）
+// Figma P-08 の文字盤を点ごとに写したもの（o 盤 / T 目盛り / g 灰の点、中心は22行22列）
+const DIAL=["                 googoTogoo                  ", "              ogogooooTooogoogo              ", "            ogooooooooToooooooogo            ", "          oTooooooooooTooooooooooTo          ", "         goTToooooooooooooooooooToog         ", "        ogooToooooooooooooooooooToooo        ", "       ggooooooooooooooooooooooooooogg       ", "      ooooooooooooooooooooooooooooooooo      ", "     ogooooooooooooooooooooooooooooooogo     ", "    gooooooooooooooooooooooooooooooooooog    ", "   ooooooooooooooooooooooooooooooooooooooo   ", "   TToooooooooooooooooooooooooooooooooooTT   ", "  ooTToooooooooooooooooooooooooooooooooTToo  ", "  gooooooooooooooooooooooooooooooooooooooog  ", " ooooooooooooooooooooooooooooooooooooooooooo ", " gooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "gooooooooooooooooooooooooooooooooooooooooooo ", "ooooooooooooooooooooooooooooooooooooooooooogo", "ooooooooooooooooooooooooooooooooooooooooooooo", "goooooooooooooooooooooooooooooooooooooooooogg", "ooooooooooooooooooooooooooooooooooooooooooooo", "TTTToooooooooooooooooooooooooooooooooooooTTTT", "ooooooooooooooooooooooooooooooooooooooooooooo", "goooooooooooooooooooooooooooooooooooooooooogg", "ooooooooooooooooooooooooooooooooooooooooooooo", "ooooooooooooooooooooooooooooooooooooooooooogo", "gooooooooooooooooooooooooooooooooooooooooooo ", " ooooooooooooooooooooooooooooooooooooooooooo ", " gooooooooooooooooooooooooooooooooooooooooog ", " ooooooooooooooooooooooooooooooooooooooooooo ", "  gooooooooooooooooooooooooooooooooooooooog  ", "  ooTToooooooooooooooooooooooooooooooooTToo  ", "   TToooooooooooooooooooooooooooooooooooTT   ", "   ooooooooooooooooooooooooooooooooooooooo   ", "    gooooooooooooooooooooooooooooooooooog    ", "     ogooooooooooooooooooooooooooooooogo     ", "     ggooooooooooooooooooooooooooooooogg     ", "       ogooooooooooooooooooooooooooogo       ", "       gooooToooooooooooooooooooToooog       ", "         goTToooooooooooooooooooToog         ", "          oTooooooooooTooooooooooTo          ", "            ogooooooooToooooooogo            ", "              ogogooooTooogoogo              ", "                 googoTogoo                  "];
+const RED=[[3,-9],[2,-8],[3,-8],[2,-7],[3,-7],[1,-6],[2,-6],[3,-6],[1,-5],[2,-5],[0,-4],[1,-4],[2,-4],[-1,-3],[0,-3],[1,-3],[2,-3],[-1,-2],[0,-2],[1,-2],[2,-2],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[-1,0],[0,0],[1,0],[2,0],[2,1]];
+const GREY=[[-2,0],[-2,1],[-1,1],[0,1],[1,1],[-2,2],[-1,2],[0,2],[1,2],[-2,3],[-1,3],[0,3],[-3,4],[-2,4],[-1,4],[0,4],[-3,5],[-2,5],[-1,5],[-3,6],[-2,6],[-1,6],[-3,7],[-2,7],[-3,8],[-3,9]];
+const TH0=Math.atan2(3,9);       // Figmaでの針の向き
 const cv=document.getElementById('c'), cx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const C={gap:css('--gap'),dot:css('--dot'),dg:css('--dial-gap'),dd:css('--dial-dot'),tick:css('--tick'),needle:css('--needle'),tail:css('--tail'),ink:css('--ink')};
+const C={dg:css('--dial-gap'),dd:css('--dial-dot'),tick:css('--tick'),grey:'#cfc7b6',cross:'#f0ede3',needle:css('--needle'),tail:css('--tail'),
+  // 点のあいだの色（Figmaの見え方に合わせる）
+  needleGap:'#f97874',needleX:'#f6b4ae',tailGap:'#ded9ce',tailX:'#e8e5db',tickGap:'#f3cfa8',ink:css('--ink')};
+const redSet=new Set(RED.map(p=>p+'')), greySet=new Set(GREY.map(p=>p+''));
 
-let W=0,H=0,dpr=1,gx=0,gy=0,bg=null;
+let W=0,H=0,dpr=1,ox=0,cxp=0,cyp=0,bg=null;
 function layout(){
   dpr=Math.min(window.devicePixelRatio||1,3);
   W=innerWidth; H=innerHeight;
   cv.width=W*dpr; cv.height=H*dpr; cx.setTransform(dpr,0,0,dpr,0,0);
-  gx=Math.floor(W/2/P); gy=Math.round(H*0.48/P);   // 文字盤の中心（点の位置）
-  const y=gy*P;
-  $('dist').style.top=(y+174)+'px';
-  $('walk').style.top=(y+256)+'px';
+  ox=(((Math.round(W/2)-2)%P)+P)%P;                       // 真ん中に点の列が来るように
+  document.documentElement.style.backgroundPosition=ox+'px 0';
+  cxp=Math.round(W/2)-2;                                  // 中心の点の左上
+  cyp=Math.round((H*410/852-2)/P)*P;                       // Figmaと同じ高さの割合
+  const y=cyp+2;
+  $('dist').style.top=(y+173.5)+'px';
+  $('walk').style.top=(y+256.5)+'px';
   bg=document.createElement('canvas'); bg.width=W*dpr; bg.height=H*dpr;
   const b=bg.getContext('2d'); b.setTransform(dpr,0,0,dpr,0,0);
-  b.fillStyle=C.gap; b.fillRect(0,0,W,H);
-  for(let j=0;j*P<H;j++)for(let i=0;i*P<W;i++){
-    const r=Math.hypot(i-gx,j-gy);
-    if(r<=R){b.fillStyle=C.dg;b.fillRect(i*P,j*P,P,P);b.fillStyle=C.dd;}else b.fillStyle=C.dot;
-    b.fillRect(i*P+1,j*P+1,D,D);
-  }
-  // 目盛り：12本、上下左右は少し長く
-  b.fillStyle=C.tick;
-  for(let k=0;k<12;k++){
-    const a=k*Math.PI/6, len=k%3===0?3:2;
-    for(let s=0;s<len;s++){
-      const rr=R-1.6-s, i=Math.round(gx+Math.sin(a)*rr), j=Math.round(gy-Math.cos(a)*rr);
-      b.fillRect(i*P+1,j*P+1,D,D);
-    }
-  }
+  DIAL.forEach((row,r)=>{for(let c=0;c<row.length;c++){
+    const k=row[c]; if(k===' ')continue;
+    const x=cxp+(c-22)*P, yy=cyp+(r-22)*P;
+    b.fillStyle=k==='T'?C.tickGap:C.dg; b.fillRect(x,yy,P,P);
+    b.fillStyle=k==='T'?C.tickGap:C.cross; b.fillRect(x+D,yy+D,P-D,P-D);
+    b.fillStyle=k==='T'?C.tick:k==='g'?C.grey:C.dd; b.fillRect(x,yy,D,D);
+  }});
   // ▲ 自分の向き（真上で固定）
   b.fillStyle=C.ink;
-  const ty=gy-Math.ceil(R)-2;
-  b.fillRect(gx*P+1,(ty)*P+1,D,D);
-  for(let d=-1;d<=1;d++)b.fillRect((gx+d)*P+1,(ty+1)*P+1,D,D);
+  b.fillRect(cxp,cyp-25*P,D,D);
+  for(let d=-1;d<=1;d++)b.fillRect(cxp+d*P,cyp-24*P,D,D);
 }
 
-// 針：前（赤）と後ろ（灰）を点で塗る
-function inTri(x,y,ax,ay,bx,by,qx,qy){
-  const s=(p,q,r,t,u,v)=>(p-u)*(t-v)-(r-u)*(q-v);
-  const d1=s(x,y,ax,ay,bx,by),d2=s(x,y,bx,by,qx,qy),d3=s(x,y,qx,qy,ax,ay);
-  return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
-}
+// 針：Figmaの針の点を、向きに合わせて回して置き直す
 function draw(angle){
+  cx.clearRect(0,0,W,H);
   cx.drawImage(bg,0,0,W,H);
-  const sn=Math.sin(angle), cs=Math.cos(angle);
+  const a=-(angle-TH0), sn=Math.sin(a), cs=Math.cos(a);
   for(let j=-12;j<=12;j++)for(let i=-12;i<=12;i++){
-    // 画面の点を針の向きに戻して判定（yは上が前）
-    const x=i*cs+j*sn, y=-(-i*sn+j*cs);
-    let col=null;
-    if(inTri(x,y,-2.6,0.2,2.6,0.2,0,9.5))col=C.needle;
-    else if(inTri(x,y,-2,0.2,2,0.2,0,-8))col=C.tail;
-    if(col){cx.fillStyle=col;cx.fillRect((gx+i)*P+1,(gy+j)*P+1,D,D);}
+    const k=Math.round(i*cs-j*sn)+','+Math.round(i*sn+j*cs);
+    const red=redSet.has(k), grey=!red&&greySet.has(k);
+    if(!red&&!grey)continue;
+    const x=cxp+i*P, y=cyp+j*P;
+    cx.fillStyle=red?C.needleGap:C.tailGap; cx.fillRect(x,y,P,P);
+    cx.fillStyle=red?C.needleX:C.tailX; cx.fillRect(x+D,y+D,P-D,P-D);
+    cx.fillStyle=red?C.needle:C.tail; cx.fillRect(x,y,D,D);
   }
 }
 
