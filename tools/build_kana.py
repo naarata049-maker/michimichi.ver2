@@ -1,30 +1,10 @@
 # 日本郵便の郵便番号データ（読みがな付き）から、市区町村コード×町名→ひらがな の表を県ごとに作る
-import csv, io, json, os, re, unicodedata, urllib.request, zipfile
-URLS = ['https://www.post.japanpost.jp/zipcode/dl/utf/zip/utf_ken_all.zip',
-        'https://www.post.japanpost.jp/zipcode/dl/kogaki/zip/ken_all.zip',
-        'https://www.post.japanpost.jp/service/search/zipcode/dl/utf/zip/utf_ken_all.zip',
-        'https://www.post.japanpost.jp/service/search/zipcode/dl/kogaki/zip/ken_all.zip']
-def fetch():
-    for u in URLS:
-        try:
-            req = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0'})
-            data = urllib.request.urlopen(req, timeout=60).read()
-            z = zipfile.ZipFile(io.BytesIO(data))
-            b = z.read([n for n in z.namelist() if n.lower().endswith('.csv')][0])
-            print('ok', u)
-            try: return b.decode('utf-8')
-            except UnicodeDecodeError: return b.decode('cp932')
-        except Exception as e:
-            print('ng', u, e)
-    # どれもだめなら、ダウンロードの案内ページにあるzipの場所を出して終わる
-    for page in ['https://www.post.japanpost.jp/zipcode/download.html','https://www.post.japanpost.jp/zipcode/dl/kogaki-zip.html','https://www.post.japanpost.jp/zipcode/dl/utf-zip.html']:
-        try:
-            h = urllib.request.urlopen(urllib.request.Request(page, headers={'User-Agent': 'Mozilla/5.0'}), timeout=30).read().decode('utf-8','ignore')
-            print(page, re.findall(r'href="([^"]+\.zip)"', h))
-        except Exception as e:
-            print('ng', page, e)
-    raise SystemExit(1)
-raw = fetch()
+import csv, io, json, os, re, unicodedata, zipfile
+# 使い方: python3 tools/build_kana.py utf_ken_all.zip
+# （日本郵便 https://www.post.japanpost.jp/zipcode/dl/utf-zip.html の「全国一括」をブラウザでダウンロードしたもの）
+import sys
+z = zipfile.ZipFile(sys.argv[1])
+raw = z.read([n for n in z.namelist() if n.lower().endswith('.csv')][0]).decode('utf-8')
 def hira(s):
     s = unicodedata.normalize('NFKC', s)
     return ''.join(chr(ord(c) - 0x60) if 'ァ' <= c <= 'ヶ' else c for c in s)

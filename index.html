@@ -435,6 +435,10 @@ const toHira=s=>s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x
 async function kanaOf(code,name,p){
   const tb=await kanaTable(code), towns=tb&&tb[String(code).padStart(5,'0')];
   if(towns&&towns[name])return towns[name];
+  if(towns){   // 「西賀茂」のように、表では「西賀茂角社町」などに分かれている町名：それらの読みの共通の頭を使う
+    const ks=Object.keys(towns).filter(k=>k.startsWith(name)&&k!==name).map(k=>towns[k]);
+    if(ks.length>=2){let c=ks[0];for(const k of ks)while(!k.startsWith(c))c=c.slice(0,-1);if(c)return c;}
+  }
   const o=await getJSON('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=jp&namedetails=1&limit=5&bounded=1&viewbox='+(p.lng-.03)+','+(p.lat+.03)+','+(p.lng+.03)+','+(p.lat-.03)+'&q='+encodeURIComponent(name));
   for(const r of o||[]){const n=r.namedetails||{};if(n.name===name||n['name:ja']===name){const k=n['name:ja-Hira']||n['name:ja_kana']||n['name:ja-Kana'];if(k)return toHira(k);}}
   if(towns){   // 町名の頭と残りを、それぞれ表にある町名でつなぐ（いちばん長く一致するものから）
