@@ -82,6 +82,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .cut::before{left:-11px}.cut::after{right:-11px}
 .omakase{height:50px;border-radius:25px;border:1px solid var(--chip-line);background:none;font-size:15px}
 .ticket .center{text-align:center}
+.bottom.low{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
 .bottom{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 42px);display:flex;flex-direction:column;align-items:center;gap:10px;padding-inline:24px}
 button{font-family:var(--font);color:var(--ink);cursor:pointer}
 .btn{width:100%;max-width:345px;height:54px;font-size:16px;border-radius:27px;letter-spacing:.04em}
@@ -109,7 +110,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <div id="tin"></div>
   <p class="t ttl" data-a="tut" data-y="212" id="tt"></p>
   <p class="t body from-top" data-a="tut" data-y="260" id="tb"></p>
-  <div class="dots" data-a="tut" data-y="362" id="tdots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="dots" id="tdots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 </section>
 
 <!-- P-04 位置情報と写真の利用 -->
@@ -240,13 +241,15 @@ function layout(){
   const ox=(((Math.round(W/2)-2)%P)+P)%P;                 // 真ん中に点の列が来るように
   document.documentElement.style.backgroundPosition=ox+'px 0';
   cxp=Math.round(W/2)-2;                                  // 中心の点の左上
-  const btnTop=document.querySelector('.bottom').getBoundingClientRect().bottom-54;
+  const bt=document.querySelector('.bottom'), btnTop=bt.getBoundingClientRect().bottom-54-(bt.classList.contains('low')?24:0);
   const snap=v=>Math.round((v-2)/P)*P;
   // コンパスの画面：Figmaと同じ割合を基本に、下の文字がボタンにかからない高さまで上げる
   cyp=snap(Math.max(250,Math.min(H*410/852,btnTop-16-282)));
   // チュートリアル：文字盤を上げ、それでも足りなければ下の文の間を詰める
-  A.tut=snap(Math.max(262,Math.min(H*356/852,btnTop-22-362)));
-  sT=Math.max(.5,Math.min(1,(btnTop-22-A.tut-135)/227));
+  // チュートリアルはボタンを少し下げ、点々はボタンのすぐ上に置く
+  const btnT=btnTop+24; $('tdots').style.top=(btnT-30)+'px';
+  A.tut=snap(Math.max(262,Math.min(H*356/852,btnT-60-75-260)));
+  sT=Math.max(.4,Math.min(1,(btnT-60-75-135-A.tut)/125));
   A.boot=snap(H*385/852);
   place();
   bgs={compass:dialLayer(DIAL,true),plain:dialLayer(DIAL,false),search:dialLayer(DIAL6,false),
@@ -311,6 +314,7 @@ function show(v){
   const m=MAIN[v]; $('main').hidden=!m;
   if(m){$('main').textContent=typeof m==='function'?m():m; $('main').className='btn '+(v==='arrive'?'paper':'ink');}
   $('tests').hidden=v!=='walk';
+  document.querySelector('.bottom').classList.toggle('low',v==='tut');
   $('ticket').textContent='片道券 No.'+(dest?dest.no:ticketNo);
   if(v==='tut')renderTut();
   if(v==='cond'){ticketNo=String(Math.floor(Math.random()*9000)+1000);$('cno').textContent='No.'+ticketNo;}
