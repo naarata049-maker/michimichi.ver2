@@ -80,6 +80,18 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .cut{border-top:1px dashed var(--chip-line);margin:10px -24px 18px;position:relative}
 .cut::before,.cut::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:10px;background:var(--gap);border:1px solid var(--card-line)}
 .cut::before{left:-11px}.cut::after{right:-11px}
+.rec{gap:clamp(8px,1.6vh,14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 190px)}
+.rec .ticket{margin-top:clamp(4px,1.4vh,22px);gap:clamp(4px,1vh,10px);flex:0 1 auto;min-height:0;overflow:hidden}
+.rec .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rec .place{font-size:clamp(34px,5.2vh,44px);letter-spacing:.06em;line-height:1.2;white-space:nowrap}
+.rec .kana{font-size:12px;color:var(--sub);letter-spacing:.5em}
+.stamp{width:clamp(76px,11.5vh,100px);aspect-ratio:1;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;flex:none;position:relative;font-size:clamp(24px,3.6vh,32px)}
+.stamp::before{content:"";position:absolute;inset:6px;border-radius:50%;border:1.5px solid var(--ink)}
+.rec .hint{font-size:24px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats b{display:block;font-weight:400;font-size:24px;margin-top:4px;font-variant-numeric:tabular-nums}
+.rec .route{font-size:12px;color:var(--sub);margin-top:clamp(4px,2vh,22px)}
+.rec .cut{margin-block:clamp(6px,1.4vh,12px)}
 .omakase{height:50px;border-radius:25px;border:1px solid var(--chip-line);background:none;font-size:15px}
 .ticket .center{text-align:center}
 .bottom.low{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
@@ -96,7 +108,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="pill top" id="ticket" hidden>片道券 No.0000</div>
+<div class="pill top" id="ticket" hidden>片道切符 No.0000</div>
 <button class="skip top" id="skip" type="button" hidden>スキップ</button>
 
 <!-- P-01 起動 -->
@@ -122,12 +134,12 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <div class="card perm"><div><b>写真</b><span>歩いた道に重ねて残すために使います。</span></div><button class="sw" id="sw-photo" type="button" role="switch" aria-checked="false" aria-label="写真"></button></div>
 </section>
 
-<!-- P-05 条件選択（片道券） -->
+<!-- P-05 条件選択（片道切符） -->
 <section id="v-cond" class="page" hidden>
-  <div class="bar"><h1>今日の片道</h1><button class="mine" id="mine" type="button"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="3" width="16" height="10" rx="2"/><path d="M4 1h11"/></svg>これまでの券</button></div>
-  <p class="lead" style="margin-top:-10px">時間と移動を選ぶと、片道券ができます。</p>
+  <div class="bar"><h1>今日の片道</h1><button class="mine" id="mine" type="button"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="3" width="16" height="10" rx="2"/><path d="M4 1h11"/></svg>これまでの切符</button></div>
+  <p class="lead" style="margin-top:-10px">時間と移動を選ぶと、片道切符ができます。</p>
   <div class="card ticket">
-    <div class="head"><b>片道券</b><span id="cno">No.0000</span></div>
+    <div class="head"><b>片道切符</b><span id="cno">No.0000</span></div>
     <small>片道</small>
     <div class="chips" id="c-time"><button class="chip" type="button" data-v="20" aria-pressed="true">〜20分</button><button class="chip" type="button" data-v="45" aria-pressed="false">〜45分</button><button class="chip" type="button" data-v="90" aria-pressed="false">〜90分</button></div>
     <small>移動</small>
@@ -158,8 +170,25 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <p class="t foot" data-y="255" id="a-foot">きっかけがほしいときは<br>画面をタップ</p>
 </section>
 
+<!-- P-17 今日の片道（記録） -->
+<section id="v-rec" class="page rec" hidden>
+  <h1>今日の片道</h1>
+  <p class="lead" style="margin-top:-8px">評価はつけません。歩いたことだけを残します。</p>
+  <div class="card ticket">
+    <div class="head"><b>片道切符</b><span id="r-no">No.0000</span></div>
+    <small>今日の場所</small>
+    <div class="row"><div><div class="place" id="r-name"></div><div class="kana" id="r-kana"></div></div><div class="stamp">着</div></div>
+    <div class="cut"></div>
+    <small>きっかけ</small>
+    <div class="hint" id="r-hint"></div>
+    <div class="stats"><div><small>歩いた距離</small><b id="r-dist"></b></div><div><small>かかった時間</small><b id="r-time"></b></div></div>
+    <div class="route" id="r-route"></div>
+  </div>
+</section>
+
 <div class="bottom">
   <p class="note" id="note" hidden></p>
+  <button class="btn paper" id="photo" type="button" hidden>写真を残す</button>
   <button class="btn ink" id="main" type="button" hidden></button>
   <div class="tests" id="tests" hidden>
     <button class="link" id="reroll" type="button">行き先を変える</button>
@@ -299,7 +328,7 @@ const SPEED={walk:80,bike:250,train:80};   // m/分（公共交通の案内は�
 // きっかけの一語（試し用。どの町にもありそうなもの）
 const HINTS=['坂の上','いちばん古い看板','手書きの文字','赤い扉','角の店','水の音','高い木','細い路地','花のある家','小さなお社','日なたのベンチ','色あせた壁','橋のたもと','においのする店','行き止まり','古い郵便受け'];
 
-const MAIN={tut:()=>tutI<5?'次へ':'はじめる',perm:'はじめる',cond:'出かける',ready:'歩きはじめる',arrive:'記録する'};
+const MAIN={tut:()=>tutI<5?'次へ':'はじめる',perm:'はじめる',cond:'出かける',ready:'歩きはじめる',arrive:'記録する',rec:'おわる'};
 function show(v){
   view=v; note('');
   $('v-boot').hidden=v!=='boot';
@@ -309,18 +338,34 @@ function show(v){
   $('v-search').hidden=v!=='search';
   $('v-compass').hidden=!(v==='ready'||v==='walk');
   $('v-arrive').hidden=v!=='arrive';
+  $('v-rec').hidden=v!=='rec';
+  $('photo').hidden=v!=='rec';
   $('skip').hidden=v!=='tut'||tutI===5;
   $('ticket').hidden=!['search','ready','walk','arrive'].includes(v);
   const m=MAIN[v]; $('main').hidden=!m;
   if(m){$('main').textContent=typeof m==='function'?m():m; $('main').className='btn '+(v==='arrive'?'paper':'ink');}
   $('tests').hidden=v!=='walk';
   document.querySelector('.bottom').classList.toggle('low',v==='tut');
-  $('ticket').textContent='片道券 No.'+(dest?dest.no:ticketNo);
+  $('ticket').textContent='片道切符 No.'+(dest?dest.no:ticketNo);
   if(v==='tut')renderTut();
   if(v==='cond'){ticketNo=String(Math.floor(Math.random()*9000)+1000);$('cno').textContent='No.'+ticketNo;}
-  if(v==='arrive')renderArrive();
-  if(['walk','arrive'].includes(v))store.set('mm-view',v);
+  if(v==='arrive'){if(!dest.arrivedAt){dest.arrivedAt=Date.now();store.set('mm-dest2',dest);}renderArrive();}
+  if(v==='rec')renderRec();
+  if(['walk','arrive','rec'].includes(v))store.set('mm-view',v);
   if(v==='cond')store.set('mm-view','cond');
+}
+function renderRec(){
+  const name=dest.name||'名前のない町';
+  $('r-no').textContent='No.'+dest.no;
+  $('r-name').textContent=name;
+  $('r-name').style.fontSize=name.length>4?Math.floor(230/name.length)+'px':'';
+  $('r-kana').textContent=dest.kana||'';
+  $('r-hint').textContent=dest.hint;
+  $('r-dist').textContent=((dest.walked||0)/1000).toFixed(1)+' km';
+  const min=dest.startAt?Math.max(1,Math.round(((dest.arrivedAt||Date.now())-dest.startAt)/60000)):0;
+  $('r-time').textContent=min+' 分';
+  const d=new Date(dest.arrivedAt||Date.now()), p2=n=>String(n).padStart(2,'0');
+  $('r-route').textContent=d.getFullYear()+'.'+p2(d.getMonth()+1)+'.'+p2(d.getDate())+'　'+(dest.from||'ここ')+' → '+name;
 }
 let tutHint=false;
 const T6HINT='<p class="t label" data-a="tut" data-y="-48">きっかけ</p><p class="t name" data-a="tut" data-y="5">坂の上</p><p class="t small" data-a="tut" data-y="54">西賀茂</p>';
@@ -394,7 +439,7 @@ async function decide(){
   const wait=2600-(Date.now()-t0); if(wait>0)await new Promise(r=>setTimeout(r,wait));
   showHint=false; shown=TH0; show('ready'); showText();
 }
-let posWaiters=[];
+let posWaiters=[], lastPt=null;
 function waitPos(){return pos?Promise.resolve():new Promise(r=>posWaiters.push(r));}
 function watch(){
   if(watching)return; watching=true;
@@ -402,6 +447,10 @@ function watch(){
   navigator.geolocation.watchPosition(p=>{
     pos={lat:p.coords.latitude,lng:p.coords.longitude};
     posWaiters.splice(0).forEach(f=>f());
+    if(view==='walk'&&dest&&p.coords.accuracy<50){   // 歩いた距離：歩いている間だけ、8m以上動いたら足す
+      if(lastPt){const d=distBear(lastPt,pos).d;if(d>8){dest.walked=(dest.walked||0)+d;lastPt=pos;store.set('mm-dest2',dest);}}
+      else lastPt=pos;
+    }
     showText();
   },err=>{
     note(err.code===1?'位置を使う許可が出ませんでした。設定から許可して、もう一度ひらいてください。':'位置がうまく取れません。空の見える場所で待ってみてください。');
@@ -441,6 +490,10 @@ async function go(){
     else addEventListener('deviceorientation',onOri);
     live=true;
   }
+  if(!dest.startAt){
+    dest.startAt=Date.now(); dest.walked=0; store.set('mm-dest2',dest);
+    if(pos)townName(pos).then(t=>{if(t){dest.from=t.name;store.set('mm-dest2',dest);}});
+  }
   show('walk'); showText();
   try{await navigator.wakeLock.request('screen')}catch(e){}
 }
@@ -454,7 +507,12 @@ $('main').addEventListener('click',e=>{
   }
   else if(view==='cond')decide();
   else if(view==='ready')go();
-  else if(view==='arrive'){note('記録はまだ作っていません');setTimeout(()=>note(''),1800);}
+  else if(view==='arrive')show('rec');
+  else if(view==='rec'){   // おわる：記録を残して、次の片道へ
+    const log=store.get('mm-log')||[]; log.unshift(dest); store.set('mm-log',log);
+    dest=null; lastPt=null; try{localStorage.removeItem('mm-dest2');}catch(e){}
+    show('cond');
+  }
 });
 $('skip').addEventListener('click',()=>show('perm'));
 $('back').addEventListener('click',()=>{tutI=5;show('tut');});
@@ -469,8 +527,9 @@ $('omakase').addEventListener('click',()=>{
   cond.mode=['walk','bike'][Math.floor(Math.random()*2)];
   decide();
 });
-$('mine').addEventListener('click',()=>{note('これまでの券はまだ作っていません');setTimeout(()=>note(''),1800);});
+$('mine').addEventListener('click',()=>{note('これまでの切符はまだ作っていません');setTimeout(()=>note(''),1800);});
 $('reroll').addEventListener('click',()=>show('cond'));
+$('photo').addEventListener('click',()=>{note('写真はまだ作っていません');setTimeout(()=>note(''),1800);});
 $('arrived').addEventListener('click',()=>{showHint=false;show('arrive');});
 // 到着画面：画面をタップできっかけ、もう一度で戻る
 document.addEventListener('click',e=>{
@@ -516,7 +575,8 @@ let booted=false;
 function bootNext(){
   if(booted)return; booted=true;
   const last=store.get('mm-view');
-  if(dest&&last==='arrive'){watch();show('arrive');}
+  if(dest&&last==='rec'){watch();show('rec');}
+  else if(dest&&last==='arrive'){watch();show('arrive');}
   else if(dest&&last==='walk'){watch();show('ready');showText();}
   else if(store.get('mm-tut')){watch();show('cond');}
   else{tutI=0;show('tut');}
