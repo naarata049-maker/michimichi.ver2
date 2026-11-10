@@ -146,6 +146,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .trace .bar{min-height:20px}
 .mapbox{flex:1;min-height:120px;margin:4px calc(-1*max(24px,env(safe-area-inset-left,0px))) 0;position:relative;overflow:hidden;background:#f3f0e8;border-block:1px solid var(--card-line);touch-action:none}
 .mapbox canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mload{position:absolute;left:0;right:0;top:50%;margin:0;text-align:center;font-size:12px;color:var(--sub);pointer-events:none}
 .credit{position:absolute;left:8px;bottom:4px;margin:0;font-size:9px;color:var(--sub);pointer-events:none}
 .exbtn{position:absolute;top:12px;right:12px;height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--chip-line);background:var(--card);font-size:12px}
 .tools{display:flex;align-items:center;gap:18px;padding:12px 0 calc(env(safe-area-inset-bottom,0px) + 24px)}
@@ -197,7 +198,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   <div class="bar"><span class="step">1 / 3</span></div>
   <h1>歩いたことのある<br>範囲をなぞる</h1>
   <p class="lead">20〜30秒ほど、だいたいで大丈夫です。<br>この地図は設定のためだけに使います。</p>
-  <div class="mapbox" id="mapbox"><canvas id="m-map" aria-label="自宅のまわりの地図"></canvas><button class="exbtn" id="m-ex" type="button">例を入れる</button><p class="credit">地図：国土地理院　場所のデータ：© OpenStreetMap</p></div>
+  <div class="mapbox" id="mapbox"><canvas id="m-map" aria-label="自宅のまわりの地図"></canvas><button class="exbtn" id="m-ex" type="button">例を入れる</button><p class="credit">地図のデータ：© OpenStreetMap</p><p class="mload" id="m-load" hidden>地図を読みこんでいます…</p></div>
   <div class="tools"><button class="tab" type="button" data-m="draw" aria-pressed="true">なぞる</button><button class="tab" type="button" data-m="move" aria-pressed="false">動かす</button><button class="tab" type="button" id="m-undo">1つ戻す</button><button class="btn ink" type="button" id="m-next">次へ</button></div>
 </section>
 
@@ -847,14 +848,46 @@ function isKnown(p){   // まわり1マスも含めて、なぞった範囲か
   for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++)if(known.has((i+di)+','+(j+dj)))return true;
   return false;
 }
-let strokes=[], mode='draw', mc=null, homePx=null, tainted=false, mapQueued=false;
-const tiles={}, off=document.createElement('canvas');
-function tile(x,y){
-  const k=x+'/'+y; if(tiles[k])return tiles[k];
-  const im=new Image(); im.crossOrigin='anonymous';
-  im.onload=()=>{im.ok=true;drawMap();}; im.onerror=()=>{im.bad=true;};
-  im.src='https://cyberjapandata.gsi.go.jp/xyz/pale/'+Z+'/'+x+'/'+y+'.png';
-  return tiles[k]=im;
+let strokes=[], mode='draw', mc=null, homePx=null, mapQueued=false;
+// 地図：OpenStreetMapの道・線路・川を、ズーム14のタイルごとに読み、6pxのマスの点にする
+const lines=new Map(), chunks={}, chunkQ=[]; let chunkBusy=false;
+const RANK={minor:1,major:2,water:3,rail:4};
+const DOT={minor:'#e6e1d5',major:'#d6cfc0',water:'#cfe0e2',rail:'#7d786e'};
+function markLine(a,b,cls,wide){
+  const L=Math.hypot(b.x-a.x,b.y-a.y), n=Math.max(1,Math.ceil(L/2));
+  for(let k=0;k<=n;k++){
+    const x=a.x+(b.x-a.x)*k/n, y=a.y+(b.y-a.y)*k/n, i=Math.floor(x/CELL), j=Math.floor(y/CELL);
+    const cells=wide?[[0,0],[1,0],[0,1],[1,1]]:[[0,0]];
+    for(const [di,dj] of cells){const key=(i+di)+','+(j+dj), o=lines.get(key);if(!o||RANK[o]<RANK[cls])lines.set(key,cls);}
+  }
+}
+function loadChunk(cx,cy){
+  const k=cx+'/'+cy; if(chunks[k])return; chunks[k]='wait'; chunkQ.push([cx,cy,k]); nextChunk();
+}
+async function nextChunk(){
+  if(chunkBusy||!chunkQ.length)return; chunkBusy=true;
+  const [cx,cy,k]=chunkQ.shift(), n=2**14;
+  const lon=x=>x/n*360-180, lat=y=>180/Math.PI*Math.atan(Math.sinh(Math.PI*(1-2*y/n)));
+  const bb=lat(cy+1).toFixed(5)+','+lon(cx).toFixed(5)+','+lat(cy).toFixed(5)+','+lon(cx+1).toFixed(5);
+  const q='[out:json][timeout:25];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian)$"]('+bb+');'+
+    'way["railway"~"^(rail|light_rail|subway|tram|narrow_gauge)$"]["tunnel"!="yes"]('+bb+');way["waterway"~"^(river|canal)$"]['+'"tunnel"!="culvert"]('+bb+'););out geom qt;';
+  let ok=false;
+  for(const url of OVERPASS){
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),30000);
+    try{
+      const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:ctl.signal});
+      if(!r.ok)continue;
+      const j=await r.json();
+      for(const e of j.elements||[]){
+        const t=e.tags||{}, g=(e.geometry||[]).map(p=>toPx({lat:p.lat,lng:p.lon}));
+        const cls=t.railway?'rail':t.waterway?'water':/^(motorway|trunk|primary|secondary)$/.test(t.highway)?'major':'minor';
+        for(let i=1;i<g.length;i++)markLine(g[i-1],g[i],cls,cls==='major'||(cls==='water'&&t.waterway==='river'));
+      }
+      ok=true; break;
+    }catch(e){}finally{clearTimeout(t);}
+  }
+  chunks[k]=ok?'ok':'bad'; if(!ok)setTimeout(()=>{delete chunks[k];},15000);
+  chunkBusy=false; drawMap(); nextChunk();
 }
 async function mapInit(){
   const h=placeGeo('pl0');
@@ -868,40 +901,24 @@ async function mapInit(){
   drawMap();
 }
 function drawMap(){if(!mapQueued){mapQueued=true;requestAnimationFrame(()=>{mapQueued=false;paintMapBox();});}}
-// 地図の色 → 点の色（何もないところは点なし）
-function dotColor(r,g,b){
-  const l=0.3*r+0.59*g+0.11*b;
-  if(l>238)return null;
-  if(b-r>18)return '#cfe0e2';           // 水
-  if(g-r>10&&g-b>6)return '#e1e3cf';    // 緑
-  if(l<140)return '#8a857a';            // 線路・文字
-  if(l<205)return '#cfc7b6';            // 道のふち
-  return '#e6e1d5';
-}
 function paintMapBox(){
   const box=$('mapbox'), w=box.clientWidth, h=box.clientHeight, cv2=$('m-map'), r=Math.min(window.devicePixelRatio||1,3);
   if(!w||!h||!mc)return;
   if(cv2.width!==Math.round(w*r)||cv2.height!==Math.round(h*r)){cv2.width=Math.round(w*r);cv2.height=Math.round(h*r);}
   const b=cv2.getContext('2d'); b.setTransform(r,0,0,r,0,0);
   const x0=Math.round(mc.x-w/2), y0=Math.round(mc.y-h/2);
-  off.width=w; off.height=h; const o=off.getContext('2d'); o.fillStyle='#ffffff'; o.fillRect(0,0,w,h);
-  for(let ty=Math.floor(y0/TS);ty*TS<y0+h;ty++)for(let tx=Math.floor(x0/TS);tx*TS<x0+w;tx++){const im=tile(tx,ty);if(im.ok)o.drawImage(im,tx*TS-x0,ty*TS-y0);}
+  // 見えている範囲（と少し外）のデータを読む
+  for(let cy=Math.floor((y0-200)/512);cy*512<y0+h+200;cy++)for(let cx=Math.floor((x0-200)/512);cx*512<x0+w+200;cx++)loadChunk(cx,cy);
   b.fillStyle='#f3f0e8'; b.fillRect(0,0,w,h);
-  let data=null;
-  if(!tainted)try{data=o.getImageData(0,0,w,h).data;}catch(e){tainted=true;}
-  if(tainted){b.globalAlpha=.55;b.drawImage(off,0,0);b.globalAlpha=1;}   // 地図を点にできないときは薄く敷く
   const i0=Math.floor(x0/CELL), j0=Math.floor(y0/CELL);
   for(let j=j0;j*CELL<y0+h;j++)for(let i=i0;i*CELL<x0+w;i++){
-    const sx=i*CELL-x0, sy=j*CELL-y0;
-    if(known.has(i+','+j)){
-      b.fillStyle='#d3e8e0';b.fillRect(sx,sy,P,P);b.fillStyle='#e3ece4';b.fillRect(sx+D,sy+D,P-D,P-D);b.fillStyle='#b2dfd9';b.fillRect(sx,sy,D,D);continue;
-    }
-    if(!data)continue;
-    let rr=0,gg=0,bb=0,n=0;
-    for(const [dx,dy] of [[1,1],[3,2],[2,3],[4,4]]){const x=sx+dx,y=sy+dy;if(x<0||y<0||x>=w||y>=h)continue;const k=(y*w+x)*4;rr+=data[k];gg+=data[k+1];bb+=data[k+2];n++;}
-    if(!n)continue;
-    const c=dotColor(rr/n,gg/n,bb/n); if(c){b.fillStyle=c;b.fillRect(sx,sy,D,D);}
+    const sx=i*CELL-x0, sy=j*CELL-y0, k=i+','+j;
+    if(known.has(k)){b.fillStyle='#d3e8e0';b.fillRect(sx,sy,P,P);b.fillStyle='#e3ece4';b.fillRect(sx+D,sy+D,P-D,P-D);b.fillStyle='#b2dfd9';b.fillRect(sx,sy,D,D);}
+    const c=lines.get(k);
+    if(c&&(c==='rail'||!known.has(k))){b.fillStyle=DOT[c];b.fillRect(sx,sy,D,D);}
   }
+  const loading=Object.values(chunks).includes('wait');
+  $('m-load').hidden=!loading||lines.size>0;
   if(homePx){   // 自宅の点
     const hx=homePx.x-x0, hy=homePx.y-y0;
     b.fillStyle=C.ink; b.beginPath(); b.arc(hx,hy,4,0,7); b.fill();
