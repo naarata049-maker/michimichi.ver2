@@ -622,7 +622,7 @@ async function kanaOf(code,name,p){
 }
 
 // 行き先のまわり（OpenStreetMap）：歩ける道と、きっかけになりそうな場所
-const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const WALK='residential|living_street|unclassified|tertiary|secondary|primary|pedestrian|footway|service|steps|cycleway';
 async function around(p){
   const at='(around:{r},'+p.lat.toFixed(6)+','+p.lng.toFixed(6)+')';
@@ -850,7 +850,7 @@ function isKnown(p){   // まわり1マスも含めて、なぞった範囲か
 }
 let strokes=[], mode='draw', mc=null, homePx=null, mapQueued=false;
 // 地図：OpenStreetMapの道・線路・川を、ズーム14のタイルごとに読み、6pxのマスの点にする
-const lines=new Map(), chunks={}, chunkQ=[]; let chunkBusy=false;
+const lines=new Map(), chunks={}, chunkQ=[]; let chunkBusy=0, mapErr='';
 const RANK={minor:1,major:2,water:3,rail:4};
 const DOT={minor:'#e6e1d5',major:'#d6cfc0',water:'#cfe0e2',rail:'#7d786e'};
 function markLine(a,b,cls,wide){
@@ -865,18 +865,18 @@ function loadChunk(cx,cy){
   const k=cx+'/'+cy; if(chunks[k])return; chunks[k]='wait'; chunkQ.push([cx,cy,k]); nextChunk();
 }
 async function nextChunk(){
-  if(chunkBusy||!chunkQ.length)return; chunkBusy=true;
-  const [cx,cy,k]=chunkQ.shift(), n=2**14;
+  if(chunkBusy>=2||!chunkQ.length)return; chunkBusy++;
+  const [cx,cy,k]=chunkQ.shift(), n=2**15;   // ズーム15のタイル（1km四方ほど）ごと
   const lon=x=>x/n*360-180, lat=y=>180/Math.PI*Math.atan(Math.sinh(Math.PI*(1-2*y/n)));
   const bb=lat(cy+1).toFixed(5)+','+lon(cx).toFixed(5)+','+lat(cy).toFixed(5)+','+lon(cx+1).toFixed(5);
   const q='[out:json][timeout:25];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian)$"]('+bb+');'+
     'way["railway"~"^(rail|light_rail|subway|tram|narrow_gauge)$"]["tunnel"!="yes"]('+bb+');way["waterway"~"^(river|canal)$"]['+'"tunnel"!="culvert"]('+bb+'););out geom qt;';
-  let ok=false;
+  let ok=false, why=[];
   for(const url of OVERPASS){
-    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),30000);
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),20000);
     try{
-      const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:ctl.signal});
-      if(!r.ok)continue;
+      const r=await fetch(url+'?data='+encodeURIComponent(q),{signal:ctl.signal});
+      if(!r.ok){why.push(r.status);continue;}
       const j=await r.json();
       for(const e of j.elements||[]){
         const t=e.tags||{}, g=(e.geometry||[]).map(p=>toPx({lat:p.lat,lng:p.lon}));
@@ -884,10 +884,11 @@ async function nextChunk(){
         for(let i=1;i<g.length;i++)markLine(g[i-1],g[i],cls,cls==='major'||(cls==='water'&&t.waterway==='river'));
       }
       ok=true; break;
-    }catch(e){}finally{clearTimeout(t);}
+    }catch(e){why.push(e.name==='AbortError'?'時間切れ':'通信エラー');}finally{clearTimeout(t);}
   }
-  chunks[k]=ok?'ok':'bad'; if(!ok)setTimeout(()=>{delete chunks[k];},15000);
-  chunkBusy=false; drawMap(); nextChunk();
+  chunks[k]=ok?'ok':'bad'; mapErr=ok?'':why.join('・');
+  if(!ok)setTimeout(()=>{delete chunks[k];drawMap();},15000);
+  chunkBusy--; drawMap(); nextChunk(); nextChunk();
 }
 async function mapInit(){
   const h=placeGeo('pl0');
@@ -908,7 +909,7 @@ function paintMapBox(){
   const b=cv2.getContext('2d'); b.setTransform(r,0,0,r,0,0);
   const x0=Math.round(mc.x-w/2), y0=Math.round(mc.y-h/2);
   // 見えている範囲（と少し外）のデータを読む
-  for(let cy=Math.floor((y0-200)/512);cy*512<y0+h+200;cy++)for(let cx=Math.floor((x0-200)/512);cx*512<x0+w+200;cx++)loadChunk(cx,cy);
+  for(let cy=Math.floor((y0-100)/TS);cy*TS<y0+h+100;cy++)for(let cx=Math.floor((x0-100)/TS);cx*TS<x0+w+100;cx++)loadChunk(cx,cy);
   b.fillStyle='#f3f0e8'; b.fillRect(0,0,w,h);
   const i0=Math.floor(x0/CELL), j0=Math.floor(y0/CELL);
   for(let j=j0;j*CELL<y0+h;j++)for(let i=i0;i*CELL<x0+w;i++){
@@ -917,8 +918,9 @@ function paintMapBox(){
     const c=lines.get(k);
     if(c&&(c==='rail'||!known.has(k))){b.fillStyle=DOT[c];b.fillRect(sx,sy,D,D);}
   }
-  const loading=Object.values(chunks).includes('wait');
-  $('m-load').hidden=!loading||lines.size>0;
+  const st=Object.values(chunks), loading=st.includes('wait');
+  $('m-load').textContent=loading?'地図を読みこんでいます…':'地図のデータにつながりませんでした（'+mapErr+'）。少しして自動でやり直します';
+  $('m-load').hidden=lines.size>0||!(loading||(st.includes('bad')&&mapErr));
   if(homePx){   // 自宅の点
     const hx=homePx.x-x0, hy=homePx.y-y0;
     b.fillStyle=C.ink; b.beginPath(); b.arc(hx,hy,4,0,7); b.fill();
